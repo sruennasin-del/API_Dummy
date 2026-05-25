@@ -151,7 +151,7 @@
 
 
         {{-- RIGHT --}}
-        <div class="cart-right">
+        <div class="cart-right  sticky-top" style="top: 90px">
 
             <div class="summary-card">
 
