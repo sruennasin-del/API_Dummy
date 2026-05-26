@@ -6,6 +6,9 @@ use App\Http\Controllers\SubProsuctController;
 Route::get('/', function () {
     return view('Pages.home');
 });
+Route::get('/delivery', function () {
+    return view('Pages.delivery');
+});
 Route::get('/sub-product/{id}', [SubProsuctController::class, 'show']);
 Route::get('/all-sub-products', [SubProsuctController::class, 'showAll']);
 

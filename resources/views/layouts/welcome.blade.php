@@ -807,9 +807,9 @@
                     </a>
                 </li>
 
-                <li class="{{ request()->is('deals') ? 'active' : '' }}">
-                    <a href="#">
-                        <i class="ti ti-tag"></i> Deals
+                <li class="{{ request()->is('delivery') ? 'active' : '' }}">
+                    <a href="{{ url('/delivery') }}">
+                        <i class="ti ti-tag"></i> delivery
                     </a>
                 </li>
 
@@ -864,8 +864,8 @@
                 <a href="{{ url('/all-sub-products') }}">Shop</a>
             </li>
 
-            <li class="{{ request()->is('deals') ? 'active' : '' }}">
-                <a href="#">Deals</a>
+            <li class="{{ request()->is('delivery') ? 'active' : '' }}">
+                <a href="{{ url('/delivery') }}">Delivery</a>
             </li>
 
             <li class="{{ request()->is('about') ? 'active' : '' }}">
