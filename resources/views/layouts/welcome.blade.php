@@ -794,13 +794,38 @@
         <i class="ti ti-search" aria-hidden="true"></i>
         <input type="search" placeholder="Search products…" aria-label="Search products"/>
     </div>
-    <ul>
-        <li class="active"><a href="{{ url('/') }}"><i class="ti ti-home" aria-hidden="true"></i>Home</a></li>
-        <li><a href="#"><i class="ti ti-shopping-bag" aria-hidden="true"></i>Shop</a></li>
-        <li><a href="#"><i class="ti ti-tag" aria-hidden="true"></i>Deals</a></li>
-        <li><a href="#"><i class="ti ti-info-circle" aria-hidden="true"></i>About</a></li>
-        <li><a href="#"><i class="ti ti-phone" aria-hidden="true"></i>Contact</a></li>
-    </ul>
+            <ul>
+                <li class="{{ request()->is('/') ? 'active' : '' }}">
+                    <a href="{{ url('/') }}">
+                        <i class="ti ti-home"></i> Home
+                    </a>
+                </li>
+
+                <li class="{{ request()->is('all-sub-products') ? 'active' : '' }}">
+                    <a href="{{ url('/all-sub-products') }}">
+                        <i class="ti ti-shopping-bag"></i> Shop
+                    </a>
+                </li>
+
+                <li class="{{ request()->is('deals') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="ti ti-tag"></i> Deals
+                    </a>
+                </li>
+
+                <li class="{{ request()->is('about') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="ti ti-info-circle"></i> About
+                    </a>
+                </li>
+
+                <li class="{{ request()->is('contact') ? 'active' : '' }}">
+                    <a href="#">
+                        <i class="ti ti-phone"></i> Contact
+                    </a>
+                </li>
+            </ul>
+  
     <div class="mob-bottom">
         <div class="lang-select">
             <i class="ti ti-world" style="font-size:15px;color:var(--orange)" aria-hidden="true"></i>
@@ -827,17 +852,30 @@
         </button>
 
         {{-- Brand --}}
-        <a href="{{ url('/') }}" class="brand"><span>Zest</span><span class="brand-dark">Shop</span></a>
+        <a href="{{ url('/all-sub-products') }}" class="brand"><span>Zest</span><span class="brand-dark">Shop</span></a>
 
         {{-- Desktop Nav Links --}}
         <ul class="nav-links">
-            <li class="active"><a href="{{ url('/') }}">Home</a></li>
-            <li><a href="#">Shop</a></li>
-            <li><a href="#">Deals</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact</a></li>
-        </ul>
+            <li class="{{ request()->is('/') ? 'active' : '' }}">
+                <a href="{{ url('/') }}">Home</a>
+            </li>
 
+            <li class="{{ request()->is('all-sub-products') ? 'active' : '' }}">
+                <a href="{{ url('/all-sub-products') }}">Shop</a>
+            </li>
+
+            <li class="{{ request()->is('deals') ? 'active' : '' }}">
+                <a href="#">Deals</a>
+            </li>
+
+            <li class="{{ request()->is('about') ? 'active' : '' }}">
+                <a href="#">About</a>
+            </li>
+
+            <li class="{{ request()->is('contact') ? 'active' : '' }}">
+                <a href="#">Contact</a>
+            </li>
+        </ul>
         {{-- Search (desktop) --}}
         <div class="nav-search">
             <i class="ti ti-search search-icon" aria-hidden="true"></i>

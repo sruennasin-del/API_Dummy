@@ -112,93 +112,139 @@
         <p class="section-sub">Handpicked just for you · Updated daily</p>
     </div>
 
-    <div class="products-grid" role="list">
+<!-- MENU -->
 
-<script>
+<div class="menu-wrapper">
 
-$(document).ready(function(){
+    <div class="menu-grid">
 
-    $.ajax({
-        url:'https://dummyjson.com/products?limit=100',
-        type:'GET',
+        <!-- Skin Care -->
+        <a href="{{ url('sub-product/1') }}" class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-heart-pulse-fill"></i>
+            </div>
+            <div class="menu-name">
+                Skin Care
+            </div>
+        </a>
 
-        success:function(response){
+        <!-- Furniture -->
+        <a href="{{ url('sub-product/2') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-lamp-fill"></i>
+            </div>
+            <div class="menu-name">
+                Furniture
+            </div>
+        </a>
 
-            let products = response.products;
+        <!-- Food -->
+        <a href="{{ url('sub-product/3') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-cup-hot-fill"></i>
+            </div>
+            <div class="menu-name">
+                Food
+            </div>
+        </a>
 
-            let html = '';
+        <!-- Kitchen -->
+        <a href="{{ url('sub-product/4') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-egg-fried"></i>
+            </div>
+            <div class="menu-name">
+                Kitchen
+            </div>
+        </a>
 
-            products.forEach(function(product){
+        <!-- Shirt -->
+        <a href="{{ url('sub-product/5') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-dribbble"></i>
+            </div>
+            <div class="menu-name">
+             sport
+            </div>
+        </a>
 
-              html += `
-                            <article class="product-card" role="listitem">
+        <!-- Shoes -->
+        <a href="{{ url('sub-product/6') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="ti ti-shoe"></i>
+            </div>
+            <div class="menu-name">
+                Shoes
+            </div>
+        </a>
 
-                                <div class="prod-img">
-                                    <img 
-                                        src="${product.thumbnail}" 
-                                        alt="${product.title}"
-                                        style="width:100%;height:100%;object-fit:cover;"
-                                    >
-                                </div>
+        <!-- Watch -->
+        <a href="{{ url('sub-product/7') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-watch"></i>
+            </div>
+            <div class="menu-name">
+                Watch
+            </div>
+        </a>
 
-                                <div class="prod-info">
+        <!-- Accessories -->
+        <a href="{{ url('sub-product/8') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-gem"></i>
+            </div>
+            <div class="menu-name">
+                Accessories
+            </div>
+        </a>
 
-                                    <div class="prod-name">
-                                        ${product.title}
-                                    </div>
+        <!-- Motor -->
+        <a href="{{ url('sub-product/9') }}"class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-bicycle"></i>
+            </div>
+            <div class="menu-name">
+                Motor
+            </div>
+        </a>
 
-                                    <div class="prod-desc">
-                                        ${product.description}
-                                    </div>
+        <!-- Phone -->
+        <a href="{{ url('sub-product/10') }}" class="menu-card">
+            <div class="menu-icon">
+                <i class="bi bi-phone-fill"></i>
+            </div>
+            <div class="menu-name">
+                Phone
+            </div>
+        </a>
 
-                                    <!-- Rating + Discount -->
-                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:#666;">
-                                        
-                                        <span>⭐ ${product.rating}</span>
-
-                                        <span style="color:#FF6B1A;font-weight:600;">
-                                            -${product.discountPercentage}%
-                                        </span>
-
-                                    </div>
-
-                                    <div class="prod-price">
-                                        $${product.price}
-                                    </div>
-
-                                    <div class="prod-actions">
-
-                                       <button class="btn-cart" data-id="${product.id}" data-title="${product.title}" data-price="${product.price}" data-thumbnail="${product.thumbnail}">
-                                                    <i class="ti ti-shopping-cart-plus"></i>
-                                                    Add
-                                        </button>
-
-                                        <button class="btn-wish">
-                                            <i class="ti ti-heart"></i>
-                                        </button>
-
-                                    </div>
-
-                                </div>
-
-                            </article>
-                            `;
-            });
-
-            $('.products-grid').html(html);
-
-        },
-
-        error:function(error){
-            console.log(error);
-        }
-
-    });
-
-});
-
-</script> 
     </div>
+
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+
+<div class="mobile-nav">
+
+    <a href="#" class="active">
+        <i class="bi bi-house-fill"></i>
+    </a>
+
+    <a href="#">
+        <i class="bi bi-search"></i>
+    </a>
+
+    <a href="#">
+        <i class="bi bi-cart-fill"></i>
+    </a>
+
+    <a href="#">
+        <i class="bi bi-person-fill"></i>
+    </a>
+
+</div>
+
+
 </section>
 
 {{-- ════════════════════════════════
@@ -251,40 +297,178 @@ $(document).ready(function(){
         </li>
     </ul>
 </nav>
-{{-- jQuery --}}
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-{{-- Bootstrap JS (requires jQuery or Popper; bundle includes Popper) --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-$(document).on('click', '.btn-cart', function () {
 
-    let id = $(this).data('id');
-    let title = $(this).data('title');
-    let price = $(this).data('price');
-    let thumbnail = $(this).data('thumbnail');
+@push('css')
+    
 
-    $.ajax({
-        url: '/cart/add',
-        type: 'POST',
-        data: {
-            _token: $('meta[name="csrf-token"]').attr('content'),
-            id: id,
-            title: title,
-            price: price,
-            thumbnail: thumbnail
-        },
-        success: function (res) {
 
-            // ✅ update cart count instantly
-            $('#cart-count').text(res.cart_count);
+<style>
 
-        },
-        error: function (err) {
-            console.log(err);
+    /* =========================
+        MENU SECTION
+    ========================== */
+
+    .menu-wrapper{
+        padding:30px 15px 100px;
+        max-width:1400px;
+        margin:auto;
+    }
+
+    .menu-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:22px;
+    }
+
+    .menu-card{
+        background:white;
+        border-radius:24px;
+        padding:30px 20px;
+        text-align:center;
+        text-decoration:none;
+        color:#222;
+        border:2px solid #ffe3c4;
+        transition:.3s;
+        box-shadow:0 5px 18px rgba(0,0,0,.05);
+    }
+
+    .menu-card:hover{
+        transform:translateY(-6px);
+        border-color:#ff7a00;
+        box-shadow:0 12px 25px rgba(255,122,0,.18);
+    }
+
+    .menu-icon{
+        width:85px;
+        height:85px;
+        background:#fff2e5;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        margin:auto;
+        margin-bottom:18px;
+        color:#ff7a00;
+        font-size:38px;
+    }
+
+    .menu-name{
+        font-size:18px;
+        font-weight:700;
+    }
+
+    /* =========================
+        DESKTOP TOP NAV
+    ========================== */
+
+    .top-nav{
+        background:white;
+        padding:14px 25px;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        box-shadow:0 2px 10px rgba(0,0,0,.06);
+        position:sticky;
+        top:0;
+        z-index:999;
+    }
+
+    .logo{
+        color:#ff7a00;
+        font-size:28px;
+        font-weight:800;
+    }
+
+    .nav-links{
+        display:flex;
+        gap:25px;
+    }
+
+    .nav-links a{
+        text-decoration:none;
+        color:#333;
+        font-weight:600;
+        transition:.3s;
+    }
+
+    .nav-links a:hover{
+        color:#ff7a00;
+    }
+
+    /* =========================
+        MOBILE BOTTOM NAV
+    ========================== */
+
+    .mobile-nav{
+        position:fixed;
+        bottom:0;
+        left:0;
+        width:100%;
+        background:white;
+        border-top:1px solid #eee;
+        display:none;
+        justify-content:space-around;
+        padding:12px 0;
+        z-index:999;
+    }
+
+    .mobile-nav a{
+        text-decoration:none;
+        color:#999;
+        font-size:24px;
+    }
+
+    .mobile-nav a.active{
+        color:#ff7a00;
+    }
+
+    /* =========================
+        MOBILE
+    ========================== */
+
+    @media(max-width:768px){
+
+        .top-nav{
+            padding:14px 18px;
         }
-    });
 
-});
-</script>
+        .nav-links{
+            display:none;
+        }
+
+        .main-header h1{
+            font-size:24px;
+        }
+
+        .menu-grid{
+            grid-template-columns:repeat(2,1fr);
+            gap:16px;
+        }
+
+        .menu-card{
+            padding:22px 12px;
+            border-radius:18px;
+        }
+
+        .menu-icon{
+            width:65px;
+            height:65px;
+            font-size:28px;
+        }
+
+        .menu-name{
+            font-size:15px;
+        }
+
+        .mobile-nav{
+            display:flex;
+        }
+    }
+
+</style>
+
+@endpush
+
+
 @endsection
