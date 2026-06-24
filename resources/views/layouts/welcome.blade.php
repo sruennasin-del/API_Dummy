@@ -834,10 +834,30 @@
             </select>
             <i class="ti ti-chevron-down" style="font-size:11px;color:#aaa" aria-hidden="true"></i>
         </div>
-        <button class="profile-btn">
-            <div class="avatar">AK</div>
-            <span style="font-size:13px;font-weight:500">Akira K.</span>
-        </button>
+        @auth
+            <div class="d-flex flex-column gap-2 w-100 mt-2">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="avatar">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
+                    <span style="font-size:13px;font-weight:600">{{ Auth::user()->name }}</span>
+                </div>
+                @if(Auth::user()->is_admin)
+                    <a href="{{ url('/admin') }}" class="btn btn-outline-warning rounded-pill text-center py-2" style="font-size:13px; border-color: var(--orange); color: var(--orange);">
+                        <i class="ti ti-layout-dashboard align-middle me-1"></i> Admin Dashboard
+                    </a>
+                @endif
+                <form action="{{ url('/logout') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-warning text-white rounded-pill w-100 py-2" style="font-size:13px; background-color: var(--orange); border-color: var(--orange);">
+                        <i class="ti ti-logout align-middle me-1"></i> Log Out
+                    </button>
+                </form>
+            </div>
+        @else
+            <div class="d-flex gap-2 w-100 mt-2">
+                <a href="{{ url('/login') }}" class="btn btn-outline-warning rounded-pill flex-grow-1 text-center py-2" style="font-size:13px; border-color: var(--orange); color: var(--orange);">Login</a>
+                <a href="{{ url('/register') }}" class="btn btn-warning text-white rounded-pill flex-grow-1 text-center py-2" style="font-size:13px; background-color: var(--orange); border-color: var(--orange);">Register</a>
+            </div>
+        @endauth
     </div>
 </div>
 {{-- ════════════════════════════════
@@ -907,19 +927,63 @@
             <i class="ti ti-chevron-down" style="font-size:11px;color:#aaa" aria-hidden="true"></i>
         </div>
 
-        {{-- Profile --}}
-        <button class="profile-btn" aria-label="User profile">
-            <div class="avatar" aria-hidden="true">AK</div>
-            <span class="profile-name">
-                Akira K.
-                <small>Member</small>
-            </span>
-            <i class="ti ti-chevron-down" style="font-size:12px;color:#bbb" aria-hidden="true"></i>
-        </button>
+        {{-- Profile dropdown or guest auth --}}
+        @auth
+            <div class="dropdown">
+                <button class="profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User profile">
+                    <div class="avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
+                    <span class="profile-name">
+                        {{ Auth::user()->name }}
+                        <small>{{ Auth::user()->is_admin ? 'Admin' : 'Member' }}</small>
+                    </span>
+                    <i class="ti ti-chevron-down" style="font-size:12px;color:#bbb" aria-hidden="true"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-2 mt-2" style="border-radius:12px; min-width:180px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;">
+                    @if(Auth::user()->is_admin)
+                        <li>
+                            <a class="dropdown-item rounded-3 py-2" href="{{ url('/admin') }}">
+                                <i class="ti ti-layout-dashboard me-2 text-warning" style="color:var(--orange) !important;"></i> Admin Dashboard
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider bg-light"></li>
+                    @endif
+                    <li>
+                        <form action="{{ url('/logout') }}" method="POST" class="d-block w-100">
+                            @csrf
+                            <button type="submit" class="dropdown-item rounded-3 py-2 text-danger">
+                                <i class="ti ti-logout me-2"></i> Log Out
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        @else
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url('/login') }}" class="nav-link fw-semibold" style="font-size:13.5px; color:#444;">Login</a>
+                <a href="{{ url('/register') }}" class="btn btn-warning text-white rounded-pill px-3 py-1.5" style="font-size:13px; background-color: var(--orange); border-color: var(--orange);">Register</a>
+            </div>
+        @endauth
 
     </div>
 </nav>
 
+
+@if(session('error') || session('success'))
+    <div class="container mt-3">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0 px-4 py-3" role="alert" style="background-color: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5;">
+                <i class="ti ti-alert-triangle me-2 fs-5 align-middle"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 px-4 py-3" role="alert" style="background-color: #DEF7EC; color: #03543F; border: 1px solid #BCF0DA;">
+                <i class="ti ti-circle-check me-2 fs-5 align-middle"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+    </div>
+@endif
 
 @yield('content')
 
