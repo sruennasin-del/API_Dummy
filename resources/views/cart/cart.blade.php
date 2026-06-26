@@ -59,7 +59,9 @@
 
     @else
 
-    <div class="cart-layout">
+    <form action="{{ url('/checkout') }}" method="POST">
+        @csrf
+        <div class="cart-layout">
 
         {{-- LEFT --}}
         <div class="cart-left">
@@ -94,52 +96,66 @@
                     <div class="cart-qty-box">
 
                         {{-- decrease --}}      
-                        <form action="/cart/decrease" method="POST">
-                            @csrf
-
-                            <input type="hidden" name="index" value="{{ $index }}">
-
-                            <button type="submit" class="qty-btn">
-                                -
-                            </button>
-                        </form>
-
+                        <button type="submit" form="form-decrease-{{ $index }}" class="qty-btn">
+                            -
+                        </button>
 
                         <span class="qty-text">
                             {{ $item['qty'] }}
                         </span>
 
-
                         {{-- increase --}}
-                        <form action="/cart/increase" method="POST">
-                            @csrf
-
-                            <input type="hidden" name="index" value="{{ $index }}">
-
-                            <button type="submit" class="qty-btn">
-                                +
-                            </button>
-                        </form>
+                        <button type="submit" form="form-increase-{{ $index }}" class="qty-btn">
+                            +
+                        </button>
 
                     </div>
 
 
                     {{-- remove --}}
-                    <form action="/cart/remove" method="POST">
-                        @csrf
-
-                        <input type="hidden" name="index" value="{{ $index }}">
-
-                        <button type="submit" class="cart-item-remove">
-                            <i class="bi bi-trash"></i>
-                        </button>
-
-                    </form>
+                    <button type="submit" form="form-remove-{{ $index }}" class="cart-item-remove">
+                        <i class="bi bi-trash"></i>
+                    </button>
 
                 </div>
 
                 @endforeach
 
+
+
+            </div>
+
+            {{-- Delivery details --}}
+            <div class="delivery-details-card mt-4">
+                <h4 class="delivery-title mb-3">
+                    <i class="bi bi-truck me-2 text-warning" style="color: var(--orange) !important;"></i> Delivery Information
+                </h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="customer_name" class="form-label text-muted">Full Name</label>
+                        <input type="text" class="form-control rounded-3" id="customer_name" name="customer_name" 
+                               value="{{ Auth::check() ? Auth::user()->name : '' }}" required placeholder="e.g. John Doe">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="customer_email" class="form-label text-muted">Email Address</label>
+                        <input type="email" class="form-control rounded-3" id="customer_email" name="customer_email" 
+                               value="{{ Auth::check() ? Auth::user()->email : '' }}" required placeholder="e.g. john@example.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="customer_phone" class="form-label text-muted">Phone Number</label>
+                        <input type="tel" class="form-control rounded-3" id="customer_phone" name="customer_phone" 
+                               required placeholder="e.g. 012345678">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="payment_display" class="form-label text-muted">Selected Payment</label>
+                        <input type="text" class="form-control rounded-3 bg-light" id="payment_display" readonly value="ABA Bank">
+                    </div>
+                    <div class="col-12">
+                        <label for="customer_address" class="form-label text-muted">Shipping Address</label>
+                        <textarea class="form-control rounded-3" id="customer_address" name="customer_address" 
+                                  rows="3" required placeholder="Street Name, Apartment, City, etc."></textarea>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -338,29 +354,88 @@
 
 
                 {{-- button --}}
-                <button class="btn-place-order">
+                @auth
+                <button type="submit" class="btn-place-order">
 
                     <i class="bi bi-check-circle"></i>
 
                     Place order
 
                 </button>
+                @else
+                <button type="button" onclick="window.location.href='{{ url('/login') }}'" class="btn-place-order">
+
+                    <i class="bi bi-box-arrow-in-right"></i>
+
+                    Login to place order
+
+                </button>
+                @endauth
 
             </div>
 
         </div>
 
-    </div>
+    </form>
+
+    {{-- Hidden forms for quantity and remove actions to avoid nested forms --}}
+    @foreach($cart as $index => $item)
+        <form id="form-decrease-{{ $index }}" action="{{ url('/cart/decrease') }}" method="POST" style="display:none;">
+            @csrf
+            <input type="hidden" name="index" value="{{ $index }}">
+        </form>
+        <form id="form-increase-{{ $index }}" action="{{ url('/cart/increase') }}" method="POST" style="display:none;">
+            @csrf
+            <input type="hidden" name="index" value="{{ $index }}">
+        </form>
+        <form id="form-remove-{{ $index }}" action="{{ url('/cart/remove') }}" method="POST" style="display:none;">
+            @csrf
+            <input type="hidden" name="index" value="{{ $index }}">
+        </form>
+    @endforeach
 
     @endif
 
 </div>
 
+<script>
+    $(document).ready(function() {
+        $('input[name="payment_method"]').on('change', function() {
+            var val = $(this).val();
+            var displayText = 'ABA Bank';
+            if (val === 'ACLEDA') displayText = 'ACLEDA';
+            else if (val === 'Wing') displayText = 'Wing Bank';
+            else if (val === 'Cash') displayText = 'Cash on Delivery';
+            $('#payment_display').val(displayText);
+        });
+    });
+</script>
 
 @push('css')
     
 
 <style>
+
+.delivery-details-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: left;
+}
+.delivery-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+.form-control:focus {
+    border-color: #D85A30;
+    box-shadow: 0 0 0 0.25rem rgba(216, 90, 48, 0.25);
+}
 
 /* layout */
 .cart-layout{

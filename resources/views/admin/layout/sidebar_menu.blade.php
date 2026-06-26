@@ -12,13 +12,13 @@
     <div class="menu-title mt-4">Store Management</div>
     <ul class="nav-list">
         <!-- Catalog Submenu -->
-        <li class="has-submenu {{ request()->is('admin/products*') || request()->is('admin/categories*') || request()->is('admin/colors*') || request()->is('admin/sizes*') ? 'open' : '' }}">
+        <li class="has-submenu {{ request()->is('admin/products*') || request()->is('admin/categories*') || request()->is('admin/colors*') || request()->is('admin/sizes*') || request()->is('admin/inventory*') ? 'open' : '' }}">
             <a href="javascript:void(0)" class="nav-item-link">
                 <i class="ti ti-box"></i>
                 <span>Product Catalog</span>
                 <i class="ti ti-chevron-down ms-auto submenu-arrow"></i>
             </a>
-            <ul class="submenu-list" style="{{ request()->is('admin/products*') || request()->is('admin/categories*') || request()->is('admin/colors*') || request()->is('admin/sizes*') ? 'display: block;' : '' }}">
+            <ul class="submenu-list" style="{{ request()->is('admin/products*') || request()->is('admin/categories*') || request()->is('admin/colors*') || request()->is('admin/sizes*') || request()->is('admin/inventory*') ? 'display: block;' : '' }}">
                 <li>
                     <a href="{{ url('/admin/products') }}" class="submenu-link {{ (request()->is('admin/products') || (request()->is('admin/products/*') && !request()->is('admin/products/create'))) ? 'active' : '' }}">
                         <i class="ti ti-list me-1" style="font-size:12px;"></i> All Products
@@ -35,7 +35,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="submenu-link">
+                    <a href="{{ url('/admin/inventory') }}" class="submenu-link {{ request()->is('admin/inventory*') ? 'active' : '' }}">
                         <i class="ti ti-archive me-1" style="font-size:12px;"></i> Stock Inventory
                     </a>
                 </li>
@@ -58,20 +58,20 @@
         </li>
 
         <!-- Orders Submenu -->
-        <li class="has-submenu">
+        <li class="has-submenu {{ request()->is('admin/orders*') ? 'open' : '' }}">
             <a href="javascript:void(0)" class="nav-item-link">
                 <i class="ti ti-shopping-cart"></i>
                 <span>Orders & Sales</span>
                 <i class="ti ti-chevron-down ms-auto submenu-arrow"></i>
             </a>
-            <ul class="submenu-list">
+            <ul class="submenu-list" style="{{ request()->is('admin/orders*') ? 'display: block;' : '' }}">
                 <li>
-                    <a href="#" class="submenu-link">
+                    <a href="{{ url('/admin/orders') }}" class="submenu-link {{ request()->is('admin/orders') || (request()->is('admin/orders/*') && !request()->is('admin/orders/create')) ? 'active' : '' }}">
                         <i class="ti ti-receipt me-1" style="font-size:12px;"></i> All Orders
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="submenu-link">
+                    <a href="{{ url('/admin/orders?status=pending') }}" class="submenu-link {{ request()->fullUrlIs(url('/admin/orders?status=pending')) ? 'active' : '' }}">
                         <i class="ti ti-clock me-1" style="font-size:12px;"></i> Pending Orders
                     </a>
                 </li>

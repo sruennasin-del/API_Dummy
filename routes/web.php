@@ -4,13 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SubProsuctController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TrackingController;
 
 Route::get('/', function () {
     return view('Pages.home');
 });
-Route::get('/delivery', function () {
-    return view('Pages.delivery');
-});
+Route::get('/delivery', [TrackingController::class, 'index'])->name('delivery.track');
+Route::post('/delivery/track', [TrackingController::class, 'search'])->name('delivery.search');
+Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout')->middleware('auth');
+
 Route::get('/sub-product/{id}', [SubProsuctController::class, 'show']);
 Route::get('/all-sub-products', [SubProsuctController::class, 'showAll']);
 
