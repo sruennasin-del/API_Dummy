@@ -1,59 +1,94 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Http;
+
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class SubProsuctController extends Controller
 {
-    //
+    /**
+     * Display products belonging to a specific category.
+     */
     public function show($id)
-        {
-          $response = Http::get('https://dummyjson.com/products', [
-                'limit' => 195,
-                'skip'  => 0
-            ]);
-
-        $products = collect($response->json()['products']);
-
-        // 👇 FIX: map your menu ID to real API categories
-        $map = [
-            1  => 'beauty',
-            2  => 'furniture',
-            3  => 'groceries',
-            4  => 'kitchen-accessories',
-            5  => 'sports-accessories',
-            6  => 'mens-shoes',
-            7  => 'mens-watches',
-            8  => 'mobile-accessories',
-            9  => 'motorcycle',
-            10 => 'smartphones',
-        ];
-
-        $category = $map[$id] ?? null;
+    {
+        $category = null;
+        $isMainCategory = false;
+        
+        if (is_numeric($id)) {
+            $category = \App\Models\MainCategory::find($id);
+            if ($category) {
+                $isMainCategory = true;
+            } else {
+                $category = Category::find($id);
+            }
+        } else {
+            $category = \App\Models\MainCategory::where('slug', $id)->first();
+            if ($category) {
+                $isMainCategory = true;
+            } else {
+                $category = Category::where('slug', $id)->first();
+            }
+        }
 
         if (!$category) {
             abort(404);
         }
 
-        $filtered = $products->where('category', $category)->values();
+        if ($isMainCategory) {
+            // It's a Main Category, get products from all child categories
+            $subCategoryIds = Category::where('main_category_id', $category->id)->pluck('id');
+            $productsQuery = Product::whereIn('category_id', $subCategoryIds);
+        } else {
+            // It's a sub-category
+            $productsQuery = Product::where('category_id', $category->id);
+        }
+
+        $products = $productsQuery->where('status', 'active')
+            ->get()
+            ->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'title' => $product->title,
+                    'description' => $product->description,
+                    'price' => $product->price,
+                    'rating' => $product->rating ?? 4.5,
+                    'thumbnail' => $product->image,
+                    'discountPercentage' => 10,
+                    'category' => $product->category ? $product->category->name : 'General'
+                ];
+            });
 
         return view('Pages.sub_product', [
-            'products' => $filtered,
-            'category' => $category
+            'products' => $products,
+            'category' => $category->name
         ]);
     }
-   public function showAll()
+
+    /**
+     * Display all products grouped by their sub-category name.
+     */
+    public function showAll()
     {
-        $response = Http::get('https://dummyjson.com/products', [
-            'limit' => 195,
-            'skip'  => 0
-        ]);
+        $products = Product::with('category')
+            ->where('status', 'active')
+            ->get()
+            ->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'title' => $product->title,
+                    'description' => $product->description,
+                    'price' => $product->price,
+                    'rating' => $product->rating ?? 4.5,
+                    'thumbnail' => $product->image,
+                    'discountPercentage' => 10,
+                    'category' => $product->category ? $product->category->name : 'General'
+                ];
+            });
 
-        $products = $response->json()['products'];
-
-        // group by category
-        $grouped = collect($products)->groupBy('category');
+        // Group products by their sub-category name
+        $grouped = $products->groupBy('category');
 
         return view('Pages.all-sub-product', compact('grouped'));
     }

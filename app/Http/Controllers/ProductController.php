@@ -45,7 +45,7 @@ class ProductController extends Controller
         }
 
         $products = $query->latest()->paginate(10)->withQueryString();
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::whereNotNull('main_category_id')->orderBy('name')->get();
 
         return view('admin.products.index', compact('products', 'categories'));
     }
@@ -55,11 +55,13 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $categories = Category::orderBy('name')->get();
+        $mainCategories = \App\Models\MainCategory::orderBy('name')->get();
+        $categories = Category::with('mainCategory')->orderBy('name')->get();
         $colors = Color::where('status', 'active')->orderBy('name')->get();
         $sizes = Size::where('status', 'active')->orderBy('name')->get();
+        $collections = \App\Models\Collection::where('status', 'active')->orderBy('name')->get();
 
-        return view('admin.products.create', compact('categories', 'colors', 'sizes'));
+        return view('admin.products.create', compact('mainCategories', 'categories', 'colors', 'sizes', 'collections'));
     }
 
     /**
@@ -70,7 +72,7 @@ class ProductController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:ec_products,slug',
-            'category_id' => 'nullable|exists:ec_categories,id',
+            'category_id' => 'required|exists:ec_categories,id',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
@@ -90,7 +92,7 @@ class ProductController extends Controller
         ]);
 
         $data = $request->only(['title', 'category_id', 'price', 'stock', 'description', 'status']);
-        
+
         // Generate unique slug
         $slug = $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->title);
         $originalSlug = $slug;
@@ -113,25 +115,41 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
-        // Sync colors & sizes (pivot relationships)
+        // Sync colors & collections
         $product->colors()->sync($request->input('colors', []));
-        $product->sizes()->sync($request->input('sizes', []));
+        $product->collections()->sync($request->input('collections', []));
 
-        // Handle 3 detail images
-        for ($i = 0; $i < 3; $i++) {
-            $imagePath = null;
-            if ($request->hasFile("detail_image_file_{$i}")) {
-                $path = $request->file("detail_image_file_{$i}")->store('products/details', 'public');
-                $imagePath = '/storage/' . $path;
-            } elseif ($request->filled("detail_image_{$i}")) {
-                $imagePath = $request->input("detail_image_{$i}");
-            }
+        // Fallback: If no colors selected, assign to first color to hold sizes/images
+        $colorVariants = $product->colorVariants()->get();
+        if ($colorVariants->isEmpty() && \App\Models\Color::exists()) {
+            $product->colors()->sync([\App\Models\Color::first()->id]);
+            $colorVariants = $product->colorVariants()->get();
+        }
 
-            if ($imagePath) {
-                \App\Models\ProductImage::create([
-                    'product_id' => $product->id,
-                    'image_path' => $imagePath,
-                ]);
+        // Sync sizes to all variants
+        $sizeIds = $request->input('sizes', []);
+        foreach ($colorVariants as $variant) {
+            $variant->sizes()->sync($sizeIds);
+        }
+
+        // Handle 3 detail images (attach to the first active variant)
+        $firstVariant = $colorVariants->first();
+        if ($firstVariant) {
+            for ($i = 0; $i < 3; $i++) {
+                $imagePath = null;
+                if ($request->hasFile("detail_image_file_{$i}")) {
+                    $path = $request->file("detail_image_file_{$i}")->store('products/details', 'public');
+                    $imagePath = '/storage/' . $path;
+                } elseif ($request->filled("detail_image_{$i}")) {
+                    $imagePath = $request->input("detail_image_{$i}");
+                }
+
+                if ($imagePath) {
+                    \App\Models\ProductImage::create([
+                        'product_color_id' => $firstVariant->id,
+                        'image_path' => $imagePath,
+                    ]);
+                }
             }
         }
 
@@ -151,12 +169,14 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $product->load(['colors', 'sizes', 'images']);
-        $categories = Category::orderBy('name')->get();
+        $product->load(['colors', 'collections', 'colorVariants.sizes', 'colorVariants.images']);
+        $mainCategories = \App\Models\MainCategory::orderBy('name')->get();
+        $categories = Category::with('mainCategory')->orderBy('name')->get();
         $colors = Color::where('status', 'active')->orderBy('name')->get();
         $sizes = Size::where('status', 'active')->orderBy('name')->get();
+        $collections = \App\Models\Collection::where('status', 'active')->orderBy('name')->get();
 
-        return view('admin.products.edit', compact('product', 'categories', 'colors', 'sizes'));
+        return view('admin.products.edit', compact('product', 'mainCategories', 'categories', 'colors', 'sizes', 'collections'));
     }
 
     /**
@@ -167,7 +187,7 @@ class ProductController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:ec_products,slug,' . $product->id,
-            'category_id' => 'nullable|exists:ec_categories,id',
+            'category_id' => 'required|exists:ec_categories,id',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
@@ -214,12 +234,27 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Sync colors & sizes (pivot relationships)
+        // Sync colors & collections
         $product->colors()->sync($request->input('colors', []));
-        $product->sizes()->sync($request->input('sizes', []));
+        $product->collections()->sync($request->input('collections', []));
+
+        // Ensure at least one color variant exists to hold sizes/images
+        $colorVariants = $product->colorVariants()->get();
+        if ($colorVariants->isEmpty() && \App\Models\Color::exists()) {
+            $product->colors()->sync([\App\Models\Color::first()->id]);
+            $colorVariants = $product->colorVariants()->get();
+        }
+
+        // Sync sizes across all variants
+        $sizeIds = $request->input('sizes', []);
+        foreach ($colorVariants as $variant) {
+            $variant->sizes()->sync($sizeIds);
+        }
 
         // Handle 3 detail images update
-        $existingImages = $product->images;
+        $existingImages = $product->images; // This works because of our new getImagesAttribute
+        $firstVariant = $colorVariants->first();
+        
         for ($i = 0; $i < 3; $i++) {
             $imagePath = null;
             $hasNewInput = false;
@@ -230,7 +265,12 @@ class ProductController extends Controller
                 $hasNewInput = true;
             } elseif ($request->filled("detail_image_{$i}")) {
                 $imagePath = $request->input("detail_image_{$i}");
-                $hasNewInput = true;
+                
+                // Only consider it new input if the URL actually changed!
+                $existingPath = $existingImage ? $existingImage->image_path : null;
+                if ($imagePath !== $existingPath) {
+                    $hasNewInput = true;
+                }
             }
 
             $existingImage = $existingImages->get($i);
@@ -242,9 +282,9 @@ class ProductController extends Controller
                         Storage::disk('public')->delete($oldPath);
                     }
                     $existingImage->update(['image_path' => $imagePath]);
-                } else {
+                } elseif ($firstVariant) {
                     \App\Models\ProductImage::create([
-                        'product_id' => $product->id,
+                        'product_color_id' => $firstVariant->id,
                         'image_path' => $imagePath,
                     ]);
                 }
@@ -282,6 +322,17 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($oldPath);
             }
         }
+
+        // Manually clean up associated variants to avoid foreign key constraints
+        foreach ($product->colorVariants as $variant) {
+            $variant->sizes()->detach();
+            $variant->images()->delete();
+        }
+
+        // Safely detach all many-to-many relationships
+        $product->categories()->detach();
+        $product->collections()->detach();
+        $product->colors()->detach();
 
         $product->delete();
 

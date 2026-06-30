@@ -23,27 +23,50 @@ class Product extends Model
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'ec_product_category');
+    }
+
+    public function collections()
+    {
+        return $this->belongsToMany(Collection::class, 'ec_collection_product');
+    }
+
     /**
      * The colors that belong to the product.
      */
     public function colors(): BelongsToMany
     {
-        return $this->belongsToMany(Color::class, 'ec_product_color', 'product_id', 'color_id')->withTimestamps();
+        return $this->belongsToMany(Color::class, 'ec_product_color', 'product_id', 'color_id')
+                    ->using(ProductColor::class)
+                    ->withPivot('id', 'price')
+                    ->withTimestamps();
     }
 
     /**
-     * The sizes that belong to the product.
+     * The specific color variants (with prices, sizes, images) that belong to this product.
      */
-    public function sizes(): BelongsToMany
+    public function colorVariants(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->belongsToMany(Size::class, 'ec_product_size', 'product_id', 'size_id')->withTimestamps();
+        return $this->hasMany(ProductColor::class, 'product_id');
     }
 
     /**
-     * Get the gallery images for the product.
+     * Backward compatibility accessor for sizes across all variants
      */
-    public function images(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function getSizesAttribute()
     {
-        return $this->hasMany(ProductImage::class, 'product_id');
+        $sizes = $this->colorVariants->flatMap->sizes->unique('id')->all();
+        return new \Illuminate\Database\Eloquent\Collection($sizes);
+    }
+
+    /**
+     * Backward compatibility accessor for images across all variants
+     */
+    public function getImagesAttribute()
+    {
+        $images = $this->colorVariants->flatMap->images->all();
+        return new \Illuminate\Database\Eloquent\Collection($images);
     }
 }

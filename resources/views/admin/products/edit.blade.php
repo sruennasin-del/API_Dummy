@@ -165,19 +165,51 @@
                         <h2 class="card-premium-title">Classification</h2>
                     </div>
                     <div class="card-premium-body">
+                        <!-- Main Category -->
+                        <div class="mb-4">
+                            <label for="main_category_id" class="form-label fw-semibold text-dark fs-6">Main Category</label>
+                            <select id="main_category_id" class="form-select rounded-3 py-2.5" style="border-color: var(--border-color); font-size: 14px;">
+                                <option value="">Select Main Category</option>
+                                @foreach($mainCategories as $mainCat)
+                                    <option value="{{ $mainCat->id }}">{{ $mainCat->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <!-- Category -->
                         <div class="mb-4">
                             <label for="category_id" class="form-label fw-semibold text-dark fs-6">Category</label>
                             <select name="category_id" id="category_id" class="form-select rounded-3 py-2.5 @error('category_id') is-invalid @enderror" style="border-color: var(--border-color); font-size: 14px;">
                                 <option value="">Select Category</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                    <option value="{{ $category->id }}" data-parent-id="{{ $category->main_category_id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('category_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Product Collections -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-dark fs-6">Collections</label>
+                            <div class="p-3 border rounded-3 bg-light" style="border-color: var(--border-color) !important; max-height: 200px; overflow-y: auto;">
+                                @forelse($collections as $collection)
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input shadow-sm" type="checkbox" name="collections[]" value="{{ $collection->id }}" id="collection_{{ $collection->id }}" {{ in_array($collection->id, old('collections', $product->collections->pluck('id')->toArray())) ? 'checked' : '' }}>
+                                        <label class="form-check-label text-dark fw-medium" for="collection_{{ $collection->id }}" style="font-size: 14px;">
+                                            {{ $collection->name }}
+                                        </label>
+                                    </div>
+                                @empty
+                                    <div class="text-muted" style="font-size: 13px;">No active collections available.</div>
+                                @endforelse
+                            </div>
+                            <small class="text-muted d-block mt-1">Assign product to special groups like "New Arrivals" or "Promotions".</small>
+                            @error('collections')
+                                <div class="text-danger mt-1" style="font-size: 13px;">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -304,6 +336,40 @@
                                 .replace(/^-+|-+$/g, '');     // Trim leading/trailing hyphens
                 $('#slug').val(slug);
             });
+
+            // Dynamic Category Filter by Parent Main Category
+            var $categorySelect = $('#category_id');
+            var $allOptions = $categorySelect.find('option').clone();
+
+            $('#main_category_id').on('change', function() {
+                var mainId = $(this).val();
+                
+                // Rebuild category select options
+                $categorySelect.empty();
+                
+                $allOptions.each(function() {
+                    var $opt = $(this);
+                    var parentId = $opt.data('parent-id');
+                    
+                    if (!$opt.val() || !mainId || parentId == mainId) {
+                        $categorySelect.append($opt.clone());
+                    }
+                });
+            });
+
+            // Trigger change if a subcategory is preselected (e.g., from old input or edit mode)
+            var initialSub = $categorySelect.val();
+            if (initialSub) {
+                var $selectedOpt = $allOptions.filter(function() {
+                    return $(this).val() == initialSub;
+                });
+                var parentId = $selectedOpt.data('parent-id');
+                if (parentId) {
+                    $('#main_category_id').val(parentId);
+                    $('#main_category_id').trigger('change');
+                    $categorySelect.val(initialSub);
+                }
+            }
         });
     </script>
     @endpush

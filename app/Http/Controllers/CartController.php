@@ -13,34 +13,61 @@ use Illuminate\Support\Str;
 class CartController extends Controller
 {
     //
-      public function add(Request $request)
+    public function add(Request $request)
     {
         $cart = Session::get('cart', []);
 
-      
-        $id = $request->id;
+        $productId = $request->id;
+        $variantId = $request->variant_id;
+        $sizeId = $request->size_id;
+        $qty = (int) ($request->qty ?? 1);
 
-        if (isset($cart[$id])) {
-            $cart[$id]['qty'] += 1;
+        // Create a unique key for this exact product variation
+        $cartKey = $productId . '_' . $variantId . '_' . $sizeId;
+
+        if (isset($cart[$cartKey])) {
+            $cart[$cartKey]['qty'] += $qty;
         } else {
-            $cart[$id] = [
-                "id" => $id,
+            $cart[$cartKey] = [
+                "id" => $productId,
+                "variant_id" => $variantId,
+                "size_id" => $sizeId,
                 "title" => $request->title,
                 "price" => $request->price,
                 "thumbnail" => $request->thumbnail,
-                "qty" => 1
+                "color_name" => $request->color_name,
+                "size_name" => $request->size_name,
+                "qty" => $qty
             ];
         }
 
         Session::put('cart', $cart);
 
         return response()->json([
-                "message" => "Added to cart successfully",
-                "cart" => $cart,
-                "cart_count" => count($cart)
-            ]);
+            "message" => "Added to cart successfully",
+            "cart" => $cart,
+            "cart_count" => count($cart)
+        ]);
     }
-     public function cart()
+    
+    public function addWishlist(Request $request)
+    {
+        $wishlist = Session::get('wishlist', []);
+        $productId = $request->id;
+        
+        if (!in_array($productId, $wishlist)) {
+            $wishlist[] = $productId;
+            Session::put('wishlist', $wishlist);
+            return response()->json(["status" => "added", "message" => "Added to favorites!"]);
+        } else {
+            // Toggle off if already exists
+            $wishlist = array_values(array_diff($wishlist, [$productId]));
+            Session::put('wishlist', $wishlist);
+            return response()->json(["status" => "removed", "message" => "Removed from favorites!"]);
+        }
+    }
+
+    public function cart()
     {
         $cart = session()->get('cart', []);
         //  dd($cart); // 👈 ADD THIS FIRST

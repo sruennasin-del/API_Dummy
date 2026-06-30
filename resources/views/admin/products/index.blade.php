@@ -174,13 +174,8 @@
 
         <!-- Pagination Footer -->
         @if($products->hasPages())
-            <div class="card-premium-body d-flex justify-content-between align-items-center border-top py-3">
-                <div class="text-muted" style="font-size: 13px;">
-                    Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} results
-                </div>
-                <div>
-                    {{ $products->links('pagination::bootstrap-5') }}
-                </div>
+            <div class="card-premium-body border-top pt-3 pb-1 px-4">
+                {{ $products->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>

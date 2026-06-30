@@ -7,7 +7,7 @@
     <div class="row align-items-center mb-4">
         <div class="col">
             <h1 class="h3 fw-bold mb-1" style="font-family: 'Syne', sans-serif;">Edit Category</h1>
-            <p class="text-muted mb-0">Modify the configuration and info of an existing product category.</p>
+            <p class="text-muted mb-0">Modify the settings and hierarchy of an existing category.</p>
         </div>
         <div class="col-auto">
             <a href="{{ url('/admin/categories') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2" style="font-size: 14px; font-weight: 600;">
@@ -36,7 +36,6 @@
     <form action="{{ url('/admin/categories/' . $category->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
-        
         <div class="row g-4">
             <!-- Left Side: Basic Info -->
             <div class="col-lg-8">
@@ -48,7 +47,7 @@
                         <!-- Category Name -->
                         <div class="mb-4">
                             <label for="name" class="form-label fw-semibold text-dark fs-6">Category Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" value="{{ old('name', $category->name) }}" class="form-control rounded-3 py-2.5 @error('name') is-invalid @enderror" placeholder="e.g., Smartphones, Electronics" required style="border-color: var(--border-color); font-size: 14.5px;">
+                            <input type="text" name="name" id="name" value="{{ old('name', $category->name) }}" class="form-control rounded-3 py-2.5 @error('name') is-invalid @enderror" placeholder="e.g., T-Shirts, Jeans" required style="border-color: var(--border-color); font-size: 14.5px;">
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -59,7 +58,7 @@
                             <label for="slug" class="form-label fw-semibold text-dark fs-6">Slug (URL Keyword)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted border-end-0 rounded-start-3" style="font-size: 13.5px; border-color: var(--border-color);">admin/categories/</span>
-                                <input type="text" name="slug" id="slug" value="{{ old('slug', $category->slug) }}" class="form-control py-2.5 rounded-end-3 @error('slug') is-invalid @enderror" placeholder="e.g., smart-phones" style="border-color: var(--border-color); font-size: 14.5px;">
+                                <input type="text" name="slug" id="slug" value="{{ old('slug', $category->slug) }}" class="form-control py-2.5 rounded-end-3 @error('slug') is-invalid @enderror" placeholder="e.g., t-shirts" style="border-color: var(--border-color); font-size: 14.5px;">
                             </div>
                             <small class="text-muted d-block mt-1">URL-friendly version of the name. Must contain lowercase letters, numbers, and hyphens only.</small>
                             @error('slug')
@@ -70,7 +69,7 @@
                         <!-- Description -->
                         <div class="mb-2">
                             <label for="description" class="form-label fw-semibold text-dark fs-6">Description</label>
-                            <textarea name="description" id="description" rows="5" class="form-control rounded-3 py-2.5 @error('description') is-invalid @enderror" placeholder="Describe the type of products grouped under this category..." style="border-color: var(--border-color); font-size: 14.5px;">{{ old('description', $category->description) }}</textarea>
+                            <textarea name="description" id="description" rows="5" class="form-control rounded-3 py-2.5 @error('description') is-invalid @enderror" placeholder="Describe the products in this category..." style="border-color: var(--border-color); font-size: 14.5px;">{{ old('description', $category->description) }}</textarea>
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -81,24 +80,24 @@
 
             <!-- Right Side: Classification & Images -->
             <div class="col-lg-4">
-                <!-- Meta Settings -->
+                <!-- Classification Settings -->
                 <div class="card-premium mb-4">
                     <div class="card-premium-header">
                         <h2 class="card-premium-title">Classification</h2>
                     </div>
                     <div class="card-premium-body">
-                        <!-- Parent Category -->
+                        <!-- Parent Category (Main Category) -->
                         <div class="mb-4">
-                            <label for="parent_id" class="form-label fw-semibold text-dark fs-6">Parent Category</label>
-                            <select name="parent_id" id="parent_id" class="form-select rounded-3 py-2.5 @error('parent_id') is-invalid @enderror" style="border-color: var(--border-color); font-size: 14px;">
-                                <option value="">None (Top-Level Category)</option>
+                            <label for="parent_id" class="form-label fw-semibold text-dark fs-6">Main Category <span class="text-danger">*</span></label>
+                            <select name="parent_id" id="parent_id" class="form-select rounded-3 py-2.5 @error('parent_id') is-invalid @enderror" required style="border-color: var(--border-color); font-size: 14px;">
+                                <option value="" disabled>-- Select Main Category --</option>
                                 @foreach($parentCategories as $parent)
                                     <option value="{{ $parent->id }}" {{ old('parent_id', $category->parent_id) == $parent->id ? 'selected' : '' }}>
                                         {{ $parent->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            <small class="text-muted d-block mt-1">Assign to a parent category for nested/hierarchical structures.</small>
+                            <small class="text-muted d-block mt-1">Assign to a top-level Main Category.</small>
                             @error('parent_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -125,22 +124,19 @@
                         <h2 class="card-premium-title">Category Media</h2>
                     </div>
                     <div class="card-premium-body">
-                        <!-- Current Image Display -->
+                        <!-- Preview Image if exists -->
                         @if($category->image)
-                            <div class="mb-3 d-flex align-items-center gap-3 p-2 border rounded-3" style="background-color: var(--light-bg); border-color: var(--border-color) !important;">
-                                <img src="{{ $category->image }}" alt="{{ $category->name }}" class="rounded-2" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid var(--border-color);">
-                                <div class="min-w-0 flex-grow-1">
-                                    <span class="d-block fw-semibold text-dark" style="font-size: 13px;">Current Cover</span>
-                                    <span class="text-muted text-truncate d-block" style="font-size: 11px;">{{ basename($category->image) }}</span>
-                                </div>
+                            <div class="mb-3 text-center">
+                                <span class="d-block text-muted mb-2" style="font-size: 12px;">Current Image Preview:</span>
+                                <img src="{{ $category->image }}" alt="Category Image" class="img-thumbnail rounded-3" style="max-height: 150px; object-fit: contain;">
                             </div>
                         @endif
 
                         <!-- File Upload -->
                         <div class="mb-4">
-                            <label for="image_file" class="form-label fw-semibold text-dark fs-6">Upload New Image</label>
+                            <label for="image_file" class="form-label fw-semibold text-dark fs-6">Upload Image</label>
                             <input type="file" name="image_file" id="image_file" class="form-control rounded-3 py-2 @error('image_file') is-invalid @enderror" style="border-color: var(--border-color); font-size: 13.5px;">
-                            <small class="text-muted d-block mt-1">PNG, JPG, JPEG files only. Leave blank to keep current.</small>
+                            <small class="text-muted d-block mt-1">PNG, JPG, JPEG files only. Max size 2MB.</small>
                             @error('image_file')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -148,7 +144,7 @@
 
                         <!-- Image URL alternative -->
                         <div>
-                            <label for="image" class="form-label fw-semibold text-dark fs-6">Or Edit Image URL</label>
+                            <label for="image" class="form-label fw-semibold text-dark fs-6">Or Image URL</label>
                             <input type="text" name="image" id="image" value="{{ old('image', $category->image) }}" class="form-control rounded-3 py-2 @error('image') is-invalid @enderror" placeholder="https://example.com/image.jpg" style="border-color: var(--border-color); font-size: 13.5px;">
                             <small class="text-muted d-block mt-1">Direct link to an external image asset.</small>
                             @error('image')
@@ -174,7 +170,7 @@
     @push('js')
     <script>
         $(document).ready(function() {
-            // Auto generate slug from category name ONLY if changed and user wants it
+            // Auto generate slug from category name
             $('#name').on('input', function() {
                 var name = $(this).val();
                 var slug = name.toLowerCase()

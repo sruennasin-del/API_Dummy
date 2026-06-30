@@ -35,11 +35,20 @@ class ProductCrudTest extends TestCase
             'is_admin' => false,
         ]);
 
+        $mainCategory = Category::create([
+            'name' => 'Main Catalog',
+            'slug' => 'main-catalog',
+            'description' => 'Top Level',
+            'status' => 'active',
+            'parent_id' => null,
+        ]);
+
         $this->category = Category::create([
             'name' => 'Watches',
             'slug' => 'watches',
             'description' => 'Timepieces',
             'status' => 'active',
+            'parent_id' => $mainCategory->id,
         ]);
 
         $this->color = Color::create([
@@ -152,6 +161,7 @@ class ProductCrudTest extends TestCase
     {
         $response = $this->actingAs($this->adminUser)->post('/admin/products', [
             'title' => 'Nullable Variations Watch',
+            'category_id' => $this->category->id,
             'price' => 150.00,
             'stock' => 10,
             'description' => 'Test nullable variations',

@@ -12,13 +12,13 @@
     <div class="menu-title mt-4">Store Management</div>
     <ul class="nav-list">
         <!-- Catalog Submenu -->
-        <li class="has-submenu {{ request()->is('admin/products*') || request()->is('admin/categories*') || request()->is('admin/colors*') || request()->is('admin/sizes*') || request()->is('admin/inventory*') ? 'open' : '' }}">
+        <li class="has-submenu {{ request()->is('admin/products*') || request()->is('admin/main-categories*') || request()->is('admin/categories*') || request()->is('admin/collections*') || request()->is('admin/colors*') || request()->is('admin/sizes*') || request()->is('admin/inventory*') ? 'open' : '' }}">
             <a href="javascript:void(0)" class="nav-item-link">
                 <i class="ti ti-box"></i>
                 <span>Product Catalog</span>
                 <i class="ti ti-chevron-down ms-auto submenu-arrow"></i>
             </a>
-            <ul class="submenu-list" style="{{ request()->is('admin/products*') || request()->is('admin/categories*') || request()->is('admin/colors*') || request()->is('admin/sizes*') || request()->is('admin/inventory*') ? 'display: block;' : '' }}">
+            <ul class="submenu-list" style="{{ request()->is('admin/products*') || request()->is('admin/main-categories*') || request()->is('admin/categories*') || request()->is('admin/collections*') || request()->is('admin/colors*') || request()->is('admin/sizes*') || request()->is('admin/inventory*') ? 'display: block;' : '' }}">
                 <li>
                     <a href="{{ url('/admin/products') }}" class="submenu-link {{ (request()->is('admin/products') || (request()->is('admin/products/*') && !request()->is('admin/products/create'))) ? 'active' : '' }}">
                         <i class="ti ti-list me-1" style="font-size:12px;"></i> All Products
@@ -30,8 +30,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url('/admin/main-categories') }}" class="submenu-link {{ request()->is('admin/main-categories*') ? 'active' : '' }}">
+                        <i class="ti ti-category-2 me-1" style="font-size:12px;"></i> Main Categories
+                    </a>
+                </li>
+                <li>
                     <a href="{{ url('/admin/categories') }}" class="submenu-link {{ request()->is('admin/categories*') ? 'active' : '' }}">
-                        <i class="ti ti-category me-1" style="font-size:12px;"></i> Categories
+                        <i class="ti ti-category me-1" style="font-size:12px;"></i> Product Categories
                     </a>
                 </li>
                 <li>
@@ -40,8 +45,8 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="submenu-link">
-                        <i class="ti ti-tags me-1" style="font-size:12px;"></i> Product Brands
+                    <a href="{{ url('/admin/collections') }}" class="submenu-link {{ request()->is('admin/collections*') ? 'active' : '' }}">
+                        <i class="ti ti-tags me-1" style="font-size:12px;"></i> Product Collections
                     </a>
                 </li>
                 <li>
@@ -131,7 +136,7 @@
             </a>
             <ul class="submenu-list">
                 <li>
-                    <a href="#" class="submenu-link">
+                    <a href="{{ url('/admin/coupons') }}" class="submenu-link {{ request()->is('admin/coupons*') ? 'active' : '' }}">
                         <i class="ti ti-ticket me-1" style="font-size:12px;"></i> Coupon Codes
                     </a>
                 </li>
@@ -141,7 +146,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="submenu-link">
+                    <a href="{{ url('/admin/banners') }}" class="submenu-link {{ request()->is('admin/banners*') ? 'active' : '' }}">
                         <i class="ti ti-photo me-1" style="font-size:12px;"></i> Promo Banners
                     </a>
                 </li>

@@ -30,7 +30,7 @@ class InventoryController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('id', 'like', "%{$search}%");
+                    ->orWhere('id', 'like', "%{$search}%");
             });
         }
 
@@ -117,7 +117,7 @@ class InventoryController extends Controller
             } elseif ($request->action_type === 'decrease') {
                 $product->stock = max(0, $product->stock - $request->value);
             }
-            
+
             if ($product->isDirty('stock')) {
                 $product->save();
                 $updatedCount++;

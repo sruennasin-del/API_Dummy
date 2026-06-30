@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'customer_phone',
     'customer_address',
     'payment_method',
+    'coupon_code',
+    'discount',
     'subtotal',
     'service_fee',
     'delivery_fee',

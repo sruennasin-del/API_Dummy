@@ -7,7 +7,7 @@
     <div class="row align-items-center mb-4">
         <div class="col">
             <h1 class="h3 fw-bold mb-1" style="font-family: 'Syne', sans-serif;">Add New Category</h1>
-            <p class="text-muted mb-0">Create a new product category in the store catalog.</p>
+            <p class="text-muted mb-0">Create a new sub-category linked to a main category.</p>
         </div>
         <div class="col-auto">
             <a href="{{ url('/admin/categories') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2" style="font-size: 14px; font-weight: 600;">
@@ -46,7 +46,7 @@
                         <!-- Category Name -->
                         <div class="mb-4">
                             <label for="name" class="form-label fw-semibold text-dark fs-6">Category Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" value="{{ old('name') }}" class="form-control rounded-3 py-2.5 @error('name') is-invalid @enderror" placeholder="e.g., Smartphones, Electronics" required style="border-color: var(--border-color); font-size: 14.5px;">
+                            <input type="text" name="name" id="name" value="{{ old('name') }}" class="form-control rounded-3 py-2.5 @error('name') is-invalid @enderror" placeholder="e.g., T-Shirts, Jeans, Dresses" required style="border-color: var(--border-color); font-size: 14.5px;">
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -57,7 +57,7 @@
                             <label for="slug" class="form-label fw-semibold text-dark fs-6">Slug (URL Keyword)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted border-end-0 rounded-start-3" style="font-size: 13.5px; border-color: var(--border-color);">admin/categories/</span>
-                                <input type="text" name="slug" id="slug" value="{{ old('slug') }}" class="form-control py-2.5 rounded-end-3 @error('slug') is-invalid @enderror" placeholder="e.g., smart-phones (leave blank to auto-generate)" style="border-color: var(--border-color); font-size: 14.5px;">
+                                <input type="text" name="slug" id="slug" value="{{ old('slug') }}" class="form-control py-2.5 rounded-end-3 @error('slug') is-invalid @enderror" placeholder="e.g., t-shirts (leave blank to auto-generate)" style="border-color: var(--border-color); font-size: 14.5px;">
                             </div>
                             <small class="text-muted d-block mt-1">URL-friendly version of the name. Must contain lowercase letters, numbers, and hyphens only.</small>
                             @error('slug')
@@ -68,7 +68,7 @@
                         <!-- Description -->
                         <div class="mb-2">
                             <label for="description" class="form-label fw-semibold text-dark fs-6">Description</label>
-                            <textarea name="description" id="description" rows="5" class="form-control rounded-3 py-2.5 @error('description') is-invalid @enderror" placeholder="Describe the type of products grouped under this category..." style="border-color: var(--border-color); font-size: 14.5px;">{{ old('description') }}</textarea>
+                            <textarea name="description" id="description" rows="5" class="form-control rounded-3 py-2.5 @error('description') is-invalid @enderror" placeholder="Describe the products in this category..." style="border-color: var(--border-color); font-size: 14.5px;">{{ old('description') }}</textarea>
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -79,24 +79,24 @@
 
             <!-- Right Side: Classification & Images -->
             <div class="col-lg-4">
-                <!-- Meta Settings -->
+                <!-- Classification Settings -->
                 <div class="card-premium mb-4">
                     <div class="card-premium-header">
                         <h2 class="card-premium-title">Classification</h2>
                     </div>
                     <div class="card-premium-body">
-                        <!-- Parent Category -->
+                        <!-- Parent Category (Main Category) -->
                         <div class="mb-4">
-                            <label for="parent_id" class="form-label fw-semibold text-dark fs-6">Parent Category</label>
-                            <select name="parent_id" id="parent_id" class="form-select rounded-3 py-2.5 @error('parent_id') is-invalid @enderror" style="border-color: var(--border-color); font-size: 14px;">
-                                <option value="">None (Top-Level Category)</option>
+                            <label for="parent_id" class="form-label fw-semibold text-dark fs-6">Main Category <span class="text-danger">*</span></label>
+                            <select name="parent_id" id="parent_id" class="form-select rounded-3 py-2.5 @error('parent_id') is-invalid @enderror" required style="border-color: var(--border-color); font-size: 14px;">
+                                <option value="" disabled {{ old('parent_id') ? '' : 'selected' }}>-- Select Main Category --</option>
                                 @foreach($parentCategories as $parent)
                                     <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
                                         {{ $parent->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            <small class="text-muted d-block mt-1">Assign to a parent category for nested/hierarchical structures.</small>
+                            <small class="text-muted d-block mt-1">Assign to a top-level Main Category.</small>
                             @error('parent_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

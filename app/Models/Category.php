@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'slug', 'description', 'parent_id', 'status', 'image'])]
+#[Fillable(['name', 'slug', 'description', 'main_category_id', 'status', 'image'])]
 class Category extends Model
 {
     use HasFactory;
@@ -16,18 +16,11 @@ class Category extends Model
     protected $table = 'ec_categories';
 
     /**
-     * Get parent category.
+     * Get main category.
      */
-    public function parent(): BelongsTo
+    public function mainCategory(): BelongsTo
     {
-        return $this->belongsTo(Category::class, 'parent_id');
+        return $this->belongsTo(MainCategory::class, 'main_category_id');
     }
 
-    /**
-     * Get child categories.
-     */
-    public function children(): HasMany
-    {
-        return $this->hasMany(Category::class, 'parent_id');
-    }
 }

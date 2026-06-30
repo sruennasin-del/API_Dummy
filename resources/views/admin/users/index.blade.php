@@ -133,13 +133,8 @@
 
         <!-- Pagination Footer -->
         @if($users->hasPages())
-            <div class="card-premium-body d-flex justify-content-between align-items-center border-top py-3">
-                <div class="text-muted" style="font-size: 13px;">
-                    Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} results
-                </div>
-                <div>
-                    {{ $users->links('pagination::bootstrap-5') }}
-                </div>
+            <div class="card-premium-body border-top pt-3 pb-1 px-4">
+                {{ $users->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>

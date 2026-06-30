@@ -7,7 +7,7 @@
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
             <h1 class="h3 fw-bold mb-1" style="font-family: 'Syne', sans-serif;">Product Categories</h1>
-            <p class="text-muted mb-0">Organize your products with hierarchical parent and sub-categories.</p>
+            <p class="text-muted mb-0">Organize your products with sub-categories linked to a main category.</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <a href="{{ url('/admin/categories/create') }}" class="btn btn-warning text-white rounded-pill px-4 py-2" style="background-color: var(--primary); border-color: var(--primary);">
@@ -73,8 +73,7 @@
                         <th style="width: 60px;">Image</th>
                         <th>Category Name</th>
                         <th>Slug</th>
-                        <th>Parent Category</th>
-                        <th>Sub-Categories</th>
+                        <th>Main Category</th>
                         <th>Status</th>
                         <th class="text-end" style="width: 150px;">Actions</th>
                     </tr>
@@ -100,16 +99,13 @@
                             </td>
                             <td class="font-monospace text-muted" style="font-size: 12px;">{{ $category->slug }}</td>
                             <td>
-                                @if($category->parent)
+                                @if($category->mainCategory)
                                     <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1" style="font-size: 11.5px; font-weight: 500;">
-                                        {{ $category->parent->name }}
+                                        {{ $category->mainCategory->name }}
                                     </span>
                                 @else
-                                    <span class="text-muted" style="font-size: 12.5px; font-style: italic;">None</span>
+                                    <span class="text-danger" style="font-size: 12.5px; font-style: italic;">Orphan (No Main Category)</span>
                                 @endif
-                            </td>
-                            <td>
-                                <span class="fw-semibold text-dark">{{ $category->children_count }}</span>
                             </td>
                             <td>
                                 @if($category->status === 'active')
@@ -140,10 +136,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="ti ti-category fs-1 mb-2 d-block text-secondary opacity-50"></i>
                                 <span class="d-block fw-semibold mb-1">No Categories Found</span>
-                                <span>Try adjusting your search filters or add a new category.</span>
+                                <span>Add a new category and link it to a main category.</span>
                             </td>
                         </tr>
                     @endforelse
@@ -153,13 +149,8 @@
 
         <!-- Pagination Footer -->
         @if($categories->hasPages())
-            <div class="card-premium-body d-flex justify-content-between align-items-center border-top py-3">
-                <div class="text-muted" style="font-size: 13px;">
-                    Showing {{ $categories->firstItem() }} to {{ $categories->lastItem() }} of {{ $categories->total() }} results
-                </div>
-                <div>
-                    {{ $categories->links('pagination::bootstrap-5') }}
-                </div>
+            <div class="card-premium-body border-top pt-3 pb-1 px-4">
+                {{ $categories->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>

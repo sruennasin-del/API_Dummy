@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\MainCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,7 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Category::with('parent')->withCount('children');
+        $query = Category::with('mainCategory');
 
         // Handle search
         if ($request->filled('search')) {
@@ -49,11 +50,8 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        // Get all categories to choose as parent
-        $parentCategories = Category::whereNull('parent_id')
-            ->orWhere('status', 'active')
-            ->orderBy('name')
-            ->get();
+        // Get all main categories to choose as parent
+        $parentCategories = MainCategory::orderBy('name')->get();
 
         return view('admin.categories.create', compact('parentCategories'));
     }
@@ -67,13 +65,14 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:ec_categories,slug',
             'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:ec_categories,id',
+            'parent_id' => 'required|exists:ec_main_categories,id',
             'status' => 'required|in:active,inactive',
             'image_file' => 'nullable|image|max:2048',
             'image' => 'nullable|string|max:2048',
         ]);
 
-        $data = $request->only(['name', 'description', 'parent_id', 'status']);
+        $data = $request->only(['name', 'description', 'status']);
+        $data['main_category_id'] = $request->input('parent_id');
         
         // Generate unique slug
         $slug = $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->name);
@@ -102,10 +101,8 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        // Get all categories except the current one to prevent circular parenting
-        $parentCategories = Category::where('id', '!=', $category->id)
-            ->orderBy('name')
-            ->get();
+        // Get all main categories
+        $parentCategories = MainCategory::orderBy('name')->get();
 
         return view('admin.categories.edit', compact('category', 'parentCategories'));
     }
@@ -119,23 +116,14 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:ec_categories,slug,' . $category->id,
             'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:ec_categories,id|different:id',
+            'parent_id' => 'required|exists:ec_main_categories,id',
             'status' => 'required|in:active,inactive',
             'image_file' => 'nullable|image|max:2048',
             'image' => 'nullable|string|max:2048',
         ]);
 
-        $data = $request->only(['name', 'description', 'parent_id', 'status']);
-
-        // Check if parent_id creates a circular relationship (e.g. child becomes parent)
-        if ($request->filled('parent_id')) {
-            $newParentId = $request->input('parent_id');
-            // If the selected parent has this category as its parent, prevent it
-            $parent = Category::find($newParentId);
-            if ($parent && $parent->parent_id == $category->id) {
-                return back()->withErrors(['parent_id' => 'Circular relationship detected: Selected parent category is currently a sub-category of this category.'])->withInput();
-            }
-        }
+        $data = $request->only(['name', 'description', 'status']);
+        $data['main_category_id'] = $request->input('parent_id');
 
         // Generate unique slug
         $slug = $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->name);

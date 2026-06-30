@@ -59,7 +59,7 @@
 
     @else
 
-    <form action="{{ url('/checkout') }}" method="POST">
+    <form id="checkout-form" action="{{ url('/checkout') }}" method="POST">
         @csrf
         <div class="cart-layout">
 
@@ -76,7 +76,7 @@
                     <div class="cart-item-left">
 
                         <div class="cart-item-num">
-                            {{ $index + 1 }}
+                            {{ $loop->iteration }}
                         </div>
 
                     </div>
@@ -84,10 +84,19 @@
 
                     {{-- info --}}
                     <div class="cart-item-info">
-                        <div class="cart-item-name d-flex align-items-center gap-2">
-                            <img width="100px" src="{{ $item['thumbnail'] }}" alt="{{ $item['title'] }}">
-                            <p>{{ $item['title'] }}</p>
-                      
+                        <div class="cart-item-name d-flex align-items-center gap-3">
+                            <img width="80px" class="rounded-3" src="{{ $item['thumbnail'] }}" alt="{{ $item['title'] }}">
+                            <div>
+                                <p class="mb-1" style="font-size: 15px;">{{ $item['title'] }}</p>
+                                @if(isset($item['color_name']) || isset($item['size_name']))
+                                <div class="text-muted mb-1" style="font-size: 13px;">
+                                    @if(isset($item['color_name'])) <span>Color: {{ $item['color_name'] }}</span> @endif
+                                    @if(isset($item['color_name']) && isset($item['size_name'])) <span class="mx-1">|</span> @endif
+                                    @if(isset($item['size_name'])) <span>Size: {{ $item['size_name'] }}</span> @endif
+                                </div>
+                                @endif
+                                <div class="fw-bold" style="font-size: 14px; color: var(--orange);">${{ number_format($item['price'], 2) }}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -134,17 +143,17 @@
                     <div class="col-md-6">
                         <label for="customer_name" class="form-label text-muted">Full Name</label>
                         <input type="text" class="form-control rounded-3" id="customer_name" name="customer_name" 
-                               value="{{ Auth::check() ? Auth::user()->name : '' }}" required placeholder="e.g. John Doe">
+                               value="{{ Auth::check() ? Auth::user()->name : '' }}" placeholder="e.g. John Doe">
                     </div>
                     <div class="col-md-6">
                         <label for="customer_email" class="form-label text-muted">Email Address</label>
                         <input type="email" class="form-control rounded-3" id="customer_email" name="customer_email" 
-                               value="{{ Auth::check() ? Auth::user()->email : '' }}" required placeholder="e.g. john@example.com">
+                               value="{{ Auth::check() ? Auth::user()->email : '' }}" placeholder="e.g. john@example.com">
                     </div>
                     <div class="col-md-6">
                         <label for="customer_phone" class="form-label text-muted">Phone Number</label>
                         <input type="tel" class="form-control rounded-3" id="customer_phone" name="customer_phone" 
-                               required placeholder="e.g. 012345678">
+                               placeholder="e.g. 012345678">
                     </div>
                     <div class="col-md-6">
                         <label for="payment_display" class="form-label text-muted">Selected Payment</label>
@@ -153,7 +162,7 @@
                     <div class="col-12">
                         <label for="customer_address" class="form-label text-muted">Shipping Address</label>
                         <textarea class="form-control rounded-3" id="customer_address" name="customer_address" 
-                                  rows="3" required placeholder="Street Name, Apartment, City, etc."></textarea>
+                                  rows="3" placeholder="Street Name, Apartment, City, etc."></textarea>
                     </div>
                 </div>
             </div>
@@ -353,22 +362,40 @@
                 </div>
 
 
+                {{-- Coupon Code --}}
+                <div class="mt-4 mb-3" id="coupon-section">
+                    @php $appliedCoupon = session('applied_coupon'); @endphp
+                    @if($appliedCoupon)
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                        <div>
+                            <i class="ti ti-discount-2 text-success me-1"></i>
+                            <strong class="text-success" style="font-family:monospace;letter-spacing:1px;">{{ $appliedCoupon['code'] }}</strong>
+                            <span class="text-success ms-2">— You save ${{ number_format($appliedCoupon['discount'], 2) }}</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" id="remove-coupon-btn" style="font-size:12px;">Remove</button>
+                    </div>
+                    <input type="hidden" name="coupon_code" value="{{ $appliedCoupon['code'] }}">
+                    <input type="hidden" name="coupon_discount" value="{{ $appliedCoupon['discount'] }}">
+                    @else
+                    <label class="form-label text-muted" style="font-size:13px;font-weight:600;">Have a Coupon?</label>
+                    <div class="d-flex gap-2">
+                        <input type="text" id="coupon-input" class="form-control rounded-3" placeholder="Enter coupon code..." style="font-family:monospace;letter-spacing:1px;text-transform:uppercase;">
+                        <button type="button" id="apply-coupon-btn" class="btn rounded-3 text-white px-4 fw-semibold" style="background:var(--orange);white-space:nowrap;">Apply</button>
+                    </div>
+                    <div id="coupon-message" class="mt-2" style="font-size:13px;display:none;"></div>
+                    @endif
+                </div>
+
                 {{-- button --}}
                 @auth
                 <button type="submit" class="btn-place-order">
-
                     <i class="bi bi-check-circle"></i>
-
                     Place order
-
                 </button>
                 @else
                 <button type="button" onclick="window.location.href='{{ url('/login') }}'" class="btn-place-order">
-
                     <i class="bi bi-box-arrow-in-right"></i>
-
                     Login to place order
-
                 </button>
                 @endauth
 
@@ -398,8 +425,90 @@
 
 </div>
 
+<!-- QR Code Payment Modal -->
+<div class="modal fade" id="qrModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);">
+      <div class="modal-body text-center p-5">
+        
+        <!-- Bank Logo / Header -->
+        <div class="mb-4 d-flex justify-content-center align-items-center gap-3">
+            <h4 class="fw-bold m-0" id="qr-bank-name" style="font-size: 22px; color: var(--text-dark);">Digital Payment</h4>
+        </div>
+        
+        <p class="text-muted mb-4" style="font-size: 14.5px;">Please scan the QR code with your mobile banking app to complete your payment of <strong style="color: var(--orange); font-size: 16px;">${{ number_format($grandTotal ?? 0, 2) }}</strong></p>
+        
+        <!-- QR Code Wrapper -->
+        <div class="d-inline-block p-3 bg-white rounded-4 shadow-sm mb-4 border" style="border-color: #eee !important;">
+            <img id="qr-image" src="{{ asset('images/aba_qr.jpg') }}" alt="QR Code" width="220" style="border-radius: 8px; object-fit: contain;">
+        </div>
+        
+        <!-- Timer -->
+        <div class="payment-timer bg-light py-3 px-4 rounded-pill d-inline-flex align-items-center mb-2" style="border: 1px solid #eaeaea;">
+            <div class="spinner-border spinner-border-sm text-primary me-3" role="status" style="color: var(--orange) !important;"></div>
+            <span class="fw-medium text-dark" style="font-size: 14px;">Waiting for payment... <strong id="countdown" class="ms-1" style="color: var(--orange); font-size: 16px;">30</strong>s</span>
+        </div>
+        
+        <!-- Cancel Action -->
+        <div class="mt-3">
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Cancel Payment</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
     $(document).ready(function() {
+        
+        // ─── COUPON APPLY ──────────────────────────────────────────
+        $('#apply-coupon-btn').on('click', function() {
+            const code = $('#coupon-input').val().trim();
+            if (!code) return;
+
+            const subtotal = {{ collect($cart)->sum(fn($i) => ($i['price'] ?? 0) * $i['qty']) }};
+
+            $.ajax({
+                url: '{{ route("coupon.apply") }}',
+                method: 'POST',
+                data: { _token: '{{ csrf_token() }}', code: code, subtotal: subtotal },
+                success: function(res) {
+                    const msg = $('#coupon-message');
+                    msg.show();
+                    if (res.success) {
+                        msg.html('<span class="text-success"><i class="ti ti-circle-check me-1"></i>' + res.message + '</span>');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        msg.html('<span class="text-danger"><i class="ti ti-circle-x me-1"></i>' + res.message + '</span>');
+                    }
+                }
+            });
+        });
+
+        // ─── COUPON REMOVE ─────────────────────────────────────────
+        $('#remove-coupon-btn').on('click', function() {
+            $.post('{{ route("coupon.remove") }}', { _token: '{{ csrf_token() }}' }, function() {
+                location.reload();
+            });
+        });
+        
+        // Function to toggle required fields based on payment method
+        function toggleRequiredFields(paymentMethod) {
+            const fields = ['#customer_name', '#customer_email', '#customer_phone', '#customer_address'];
+            
+            if (paymentMethod === 'Cash') {
+                // If Cash, require delivery info
+                fields.forEach(field => $(field).prop('required', true));
+            } else {
+                // If Bank, delivery info is optional
+                fields.forEach(field => $(field).prop('required', false));
+            }
+        }
+        
+        // Initial setup on page load (ABA is checked by default)
+        toggleRequiredFields($('input[name="payment_method"]:checked').val());
+
         $('input[name="payment_method"]').on('change', function() {
             var val = $(this).val();
             var displayText = 'ABA Bank';
@@ -407,6 +516,64 @@
             else if (val === 'Wing') displayText = 'Wing Bank';
             else if (val === 'Cash') displayText = 'Cash on Delivery';
             $('#payment_display').val(displayText);
+            
+            // Toggle required constraints when payment method changes
+            toggleRequiredFields(val);
+        });
+
+        // Checkout Form Interceptor
+        let paymentTimer;
+        
+        $('#checkout-form').on('submit', function(e) {
+            var paymentMethod = $('input[name="payment_method"]:checked').val();
+            
+            if (paymentMethod !== 'Cash') {
+                e.preventDefault(); // Stop normal submission
+                
+                // Update Modal UI with selected bank name
+                var bankText = paymentMethod === 'ABA' ? 'ABA Bank' : (paymentMethod === 'ACLEDA' ? 'ACLEDA' : 'Wing Bank');
+                $('#qr-bank-name').text(bankText);
+                
+                // Dynamically update the QR Code Image based on the bank selected!
+                if (paymentMethod === 'ABA') {
+                    $('#qr-image').attr('src', '{{ asset("images/aba_qr.jpg") }}');
+                } else if (paymentMethod === 'ACLEDA') {
+                    $('#qr-image').attr('src', '{{ asset("images/acleda_qr.jpg") }}'); // Placeholder for future
+                } else if (paymentMethod === 'Wing') {
+                    $('#qr-image').attr('src', '{{ asset("images/wing_qr.jpg") }}'); // Placeholder for future
+                }
+                
+                // Show the modal
+                var qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+                qrModal.show();
+                
+                // Start 30 second countdown
+                let timeLeft = 30;
+                $('#countdown').text(timeLeft);
+                
+                paymentTimer = setInterval(function() {
+                    timeLeft--;
+                    $('#countdown').text(timeLeft);
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(paymentTimer);
+                        // Once 30s is over, simulate successful payment and submit form
+                        $('.payment-timer').html('<i class="bi bi-check-circle-fill text-success me-2" style="font-size: 18px;"></i> <span class="fw-bold text-success">Payment Received! Processing...</span>');
+                        
+                        setTimeout(() => {
+                            document.getElementById('checkout-form').submit();
+                        }, 1500);
+                    }
+                }, 1000);
+            }
+        });
+        
+        // Handle Cancel Button (Reset modal when it is closed)
+        $('#qrModal').on('hidden.bs.modal', function () {
+            clearInterval(paymentTimer); // Stop the countdown
+            
+            // Reset the HTML back to its original state so it's ready for the next time
+            $('.payment-timer').html('<div class="spinner-border spinner-border-sm text-primary me-3" role="status" style="color: var(--orange) !important;"></div><span class="fw-medium text-dark" style="font-size: 14px;">Waiting for payment... <strong id="countdown" class="ms-1" style="color: var(--orange); font-size: 16px;">30</strong>s</span>');
         });
     });
 </script>

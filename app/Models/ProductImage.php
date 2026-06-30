@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['product_id', 'image_path'])]
+#[Fillable(['product_color_id', 'image_path'])]
 class ProductImage extends Model
 {
     use HasFactory;
@@ -15,10 +15,10 @@ class ProductImage extends Model
     protected $table = 'ec_product_images';
 
     /**
-     * Get the product that owns the image.
+     * Get the product color variant that owns the image.
      */
-    public function product(): BelongsTo
+    public function productColor(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(ProductColor::class, 'product_color_id');
     }
 }
