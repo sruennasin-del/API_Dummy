@@ -97,4 +97,14 @@ class FrontendController extends Controller
 
         return view('Pages.shop', compact('products'));
     }
+
+    public function about()
+    {
+        return view('Pages.about');
+    }
+
+    public function contact()
+    {
+        return view('Pages.contact');
+    }
 }

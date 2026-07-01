@@ -315,6 +315,10 @@
             if (cartCountEl) {
                 cartCountEl.innerText = data.cart_count;
             }
+            const cartCountBottom = document.getElementById('cart-count-bottom');
+            if (cartCountBottom) {
+                cartCountBottom.innerText = data.cart_count;
+            }
             alert(data.message);
         })
         .catch(error => {

@@ -35,7 +35,10 @@
         $delivery = 2.00;
         $tax = $subtotal * 0.10;
 
-        $grandTotal = $subtotal + $service + $delivery + $tax;
+        $appliedCoupon = session('applied_coupon');
+        $couponDiscount = $appliedCoupon ? $appliedCoupon['discount'] : 0;
+
+        $grandTotal = max(0, $subtotal + $service + $delivery + $tax - $couponDiscount);
 
     @endphp
 
@@ -224,6 +227,12 @@
                     </span>
                 </div>
 
+                {{-- Coupon discount row --}}
+                <div class="summary-row" id="coupon-discount-row" style="{{ $couponDiscount > 0 ? '' : 'display:none;' }} color:#16a34a;">
+                    <span><i class="ti ti-discount-2 me-1"></i>Coupon <span id="coupon-code-label">{{ $appliedCoupon['code'] ?? '' }}</span></span>
+                    <span id="coupon-discount-value">-${{ number_format($couponDiscount, 2) }}</span>
+                </div>
+
 
                 <div class="summary-divider"></div>
 
@@ -232,7 +241,7 @@
 
                     <span>Total</span>
 
-                    <span>
+                    <span id="grand-total-value">
                         ${{ number_format($grandTotal, 2) }}
                     </span>
 
@@ -364,33 +373,34 @@
 
                 {{-- Coupon Code --}}
                 <div class="mt-4 mb-3" id="coupon-section">
-                    @php $appliedCoupon = session('applied_coupon'); @endphp
-                    @if($appliedCoupon)
-                    <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                    {{-- Applied coupon banner --}}
+                    <div id="coupon-applied-banner" class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2" style="background:#f0fdf4;border:1px solid #bbf7d0;{{ ($appliedCoupon && $couponDiscount > 0) ? '' : 'display:none;' }}">
                         <div>
                             <i class="ti ti-discount-2 text-success me-1"></i>
-                            <strong class="text-success" style="font-family:monospace;letter-spacing:1px;">{{ $appliedCoupon['code'] }}</strong>
-                            <span class="text-success ms-2">— You save ${{ number_format($appliedCoupon['discount'], 2) }}</span>
+                            <strong class="text-success" id="applied-code-text" style="font-family:monospace;letter-spacing:1px;">{{ $appliedCoupon['code'] ?? '' }}</strong>
+                            <span class="text-success ms-2">— You save <span id="applied-save-text">${{ number_format($couponDiscount, 2) }}</span></span>
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" id="remove-coupon-btn" style="font-size:12px;">Remove</button>
                     </div>
-                    <input type="hidden" name="coupon_code" value="{{ $appliedCoupon['code'] }}">
-                    <input type="hidden" name="coupon_discount" value="{{ $appliedCoupon['discount'] }}">
-                    @else
-                    <label class="form-label text-muted" style="font-size:13px;font-weight:600;">Have a Coupon?</label>
-                    <div class="d-flex gap-2">
-                        <input type="text" id="coupon-input" class="form-control rounded-3" placeholder="Enter coupon code..." style="font-family:monospace;letter-spacing:1px;text-transform:uppercase;">
-                        <button type="button" id="apply-coupon-btn" class="btn rounded-3 text-white px-4 fw-semibold" style="background:var(--orange);white-space:nowrap;">Apply</button>
+                    <input type="hidden" name="coupon_code" id="hidden-coupon-code" value="{{ $appliedCoupon['code'] ?? '' }}">
+                    <input type="hidden" name="coupon_discount" id="hidden-coupon-discount" value="{{ $couponDiscount }}">
+
+                    {{-- Coupon input --}}
+                    <div id="coupon-input-area" style="{{ ($appliedCoupon && $couponDiscount > 0) ? 'display:none;' : '' }}">
+                        <label class="form-label text-muted" style="font-size:13px;font-weight:600;">Have a Coupon?</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="coupon-input" class="form-control rounded-3" placeholder="Enter coupon code..." style="font-family:monospace;letter-spacing:1px;text-transform:uppercase;">
+                            <button type="button" id="apply-coupon-btn" class="btn rounded-3 text-white px-4 fw-semibold" style="background:var(--orange);white-space:nowrap;">Apply</button>
+                        </div>
+                        <div id="coupon-message" class="mt-2" style="font-size:13px;display:none;"></div>
                     </div>
-                    <div id="coupon-message" class="mt-2" style="font-size:13px;display:none;"></div>
-                    @endif
                 </div>
 
                 {{-- button --}}
                 @auth
                 <button type="submit" class="btn-place-order">
                     <i class="bi bi-check-circle"></i>
-                    Place order
+                    Place order · <span id="btn-total-text">${{ number_format($grandTotal, 2) }}</span>
                 </button>
                 @else
                 <button type="button" onclick="window.location.href='{{ url('/login') }}'" class="btn-place-order">
@@ -436,7 +446,7 @@
             <h4 class="fw-bold m-0" id="qr-bank-name" style="font-size: 22px; color: var(--text-dark);">Digital Payment</h4>
         </div>
         
-        <p class="text-muted mb-4" style="font-size: 14.5px;">Please scan the QR code with your mobile banking app to complete your payment of <strong style="color: var(--orange); font-size: 16px;">${{ number_format($grandTotal ?? 0, 2) }}</strong></p>
+        <p class="text-muted mb-4" style="font-size: 14.5px;">Please scan the QR code with your mobile banking app to complete your payment of <strong style="color: var(--orange); font-size: 16px;" id="qr-total-amount">${{ number_format($grandTotal ?? 0, 2) }}</strong></p>
         
         <!-- QR Code Wrapper -->
         <div class="d-inline-block p-3 bg-white rounded-4 shadow-sm mb-4 border" style="border-color: #eee !important;">
@@ -461,27 +471,72 @@
 
 <script>
     $(document).ready(function() {
+
+        // Current totals for dynamic updates
+        const BASE_SUBTOTAL = {{ $subtotal }};
+        const SERVICE = {{ $service }};
+        const DELIVERY = {{ $delivery }};
+        const TAX = {{ $tax }};
+        let currentDiscount = {{ $couponDiscount }};
+
+        function updateSummaryUI(discount, code) {
+            currentDiscount = discount;
+            const newTotal = Math.max(0, BASE_SUBTOTAL + SERVICE + DELIVERY + TAX - discount);
+
+            // Update discount row
+            if (discount > 0) {
+                $('#coupon-discount-row').show();
+                $('#coupon-code-label').text(code);
+                $('#coupon-discount-value').text('-$' + discount.toFixed(2));
+            } else {
+                $('#coupon-discount-row').hide();
+            }
+
+            // Update grand total
+            $('#grand-total-value').text('$' + newTotal.toFixed(2));
+            $('#btn-total-text').text('$' + newTotal.toFixed(2));
+
+            // Update QR modal total
+            $('#qr-total-amount').text('$' + newTotal.toFixed(2));
+        }
         
         // ─── COUPON APPLY ──────────────────────────────────────────
         $('#apply-coupon-btn').on('click', function() {
             const code = $('#coupon-input').val().trim();
             if (!code) return;
 
-            const subtotal = {{ collect($cart)->sum(fn($i) => ($i['price'] ?? 0) * $i['qty']) }};
+            const btn = $(this);
+            btn.prop('disabled', true).text('Applying...');
 
             $.ajax({
                 url: '{{ route("coupon.apply") }}',
                 method: 'POST',
-                data: { _token: '{{ csrf_token() }}', code: code, subtotal: subtotal },
+                data: { _token: '{{ csrf_token() }}', code: code, subtotal: BASE_SUBTOTAL },
                 success: function(res) {
                     const msg = $('#coupon-message');
                     msg.show();
                     if (res.success) {
                         msg.html('<span class="text-success"><i class="ti ti-circle-check me-1"></i>' + res.message + '</span>');
-                        setTimeout(() => location.reload(), 1000);
+
+                        // Update UI dynamically
+                        updateSummaryUI(res.discount, res.code);
+
+                        // Toggle input/banner
+                        $('#coupon-input-area').hide();
+                        $('#applied-code-text').text(res.code);
+                        $('#applied-save-text').text('$' + res.discount.toFixed(2));
+                        $('#coupon-applied-banner').show();
+
+                        // Set hidden fields
+                        $('#hidden-coupon-code').val(res.code);
+                        $('#hidden-coupon-discount').val(res.discount);
                     } else {
                         msg.html('<span class="text-danger"><i class="ti ti-circle-x me-1"></i>' + res.message + '</span>');
                     }
+                    btn.prop('disabled', false).text('Apply');
+                },
+                error: function() {
+                    btn.prop('disabled', false).text('Apply');
                 }
             });
         });
@@ -489,7 +544,17 @@
         // ─── COUPON REMOVE ─────────────────────────────────────────
         $('#remove-coupon-btn').on('click', function() {
             $.post('{{ route("coupon.remove") }}', { _token: '{{ csrf_token() }}' }, function() {
-                location.reload();
+                updateSummaryUI(0, '');
+
+                // Toggle banner/input
+                $('#coupon-applied-banner').hide();
+                $('#coupon-input-area').show();
+                $('#coupon-input').val('');
+                $('#coupon-message').hide();
+
+                // Clear hidden fields
+                $('#hidden-coupon-code').val('');
+                $('#hidden-coupon-discount').val(0);
             });
         });
         

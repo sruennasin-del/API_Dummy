@@ -11,6 +11,8 @@ use App\Http\Controllers\CouponController;
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 Route::get('/shop', [FrontendController::class, 'shop'])->name('frontend.shop');
 Route::get('/delivery', [TrackingController::class, 'index'])->name('delivery.track');
+Route::get('/about', [FrontendController::class, 'about'])->name('frontend.about');
+Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
 Route::post('/delivery/track', [TrackingController::class, 'search'])->name('delivery.search');
 Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout')->middleware('auth');
 

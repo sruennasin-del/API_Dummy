@@ -950,15 +950,77 @@
            FOOTER
         ═══════════════════════════════════════ */
         footer {
-            background: #111;
-            color: #888;
-            padding: 1.75rem 1.5rem;
-            text-align: center;
-            font-size: 13px;
+            background: var(--orange);
+            color: #000000ff;
+            padding: 4rem 1.5rem 2rem 1.5rem;
+            font-size: 14px;
+            border-top: 1px solid #27272a;
+        }
+
+        footer h5 {
+            color: #ffffff;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        footer h5::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 35px;
+            height: 2px;
+            background: var(--orange);
+            border-radius: 2px;
         }
 
         footer a {
+            color: #a1a1aa;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        footer a:hover {
             color: var(--orange);
+            padding-left: 4px;
+        }
+
+        footer .social-link {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #27272a;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+        }
+
+        footer .social-link:hover {
+            background: var(--orange);
+            color: #ffffff;
+            transform: translateY(-3px);
+            padding-left: 0;
+            /* Reset hover left padding */
+        }
+
+        footer .map-container {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #27272a;
+            height: 150px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #27272a;
+            padding-top: 1.5rem;
+            margin-top: 3rem;
+            font-size: 13px;
         }
 
         /* ═══════════════════════════════════════
@@ -974,11 +1036,18 @@
             border-top: 1px solid var(--orange-border);
             z-index: 1050;
             padding: 6px 0 env(safe-area-inset-bottom, 6px);
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, .06);
         }
 
         .bottom-nav ul {
             display: flex;
             justify-content: space-around;
+            margin: 0;
+            padding: 0;
+        }
+
+        .bottom-nav li {
+            flex: 1;
         }
 
         .bottom-nav li a {
@@ -988,8 +1057,10 @@
             gap: 2px;
             padding: 4px 8px;
             font-size: 10px;
+            font-weight: 500;
             color: #888;
             transition: color .2s;
+            position: relative;
         }
 
         .bottom-nav li a .ti {
@@ -999,6 +1070,74 @@
         .bottom-nav li.active a,
         .bottom-nav li a:hover {
             color: var(--orange);
+        }
+
+        /* Bottom nav cart badge */
+        .bottom-nav .bnav-badge {
+            position: absolute;
+            top: 0;
+            right: 50%;
+            transform: translateX(14px);
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            background: var(--orange);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 2px solid #fff;
+            line-height: 1;
+        }
+
+        /* ═══════════════════════════════════════
+           GUEST USER ICON DROPDOWN
+        ═══════════════════════════════════════ */
+        .guest-user-dropdown .dropdown-toggle::after {
+            display: none;
+        }
+
+        .guest-user-dropdown .icon-btn {
+            position: relative;
+        }
+
+        .guest-user-dropdown .dropdown-menu {
+            border: none;
+            border-radius: 12px;
+            padding: 0.5rem;
+            min-width: 160px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .1);
+            margin-top: 8px !important;
+        }
+
+        .guest-user-dropdown .dropdown-menu .dropdown-item {
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-size: 13.5px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #444;
+            transition: background .15s, color .15s;
+        }
+
+        .guest-user-dropdown .dropdown-menu .dropdown-item:hover {
+            background: var(--orange-light);
+            color: var(--orange);
+        }
+
+        .guest-user-dropdown .dropdown-menu .dropdown-item .ti {
+            font-size: 17px;
+            color: var(--orange);
+        }
+
+        .guest-user-dropdown .dropdown-menu .dropdown-divider {
+            margin: 0.25rem 0;
+            border-color: var(--border-light);
         }
 
         /* ═══════════════════════════════════════
@@ -1070,6 +1209,17 @@
                 display: none;
             }
 
+            /* Hide cart from top navbar on mobile — it's in the bottom bar */
+            .icon-btn.cart-btn {
+                display: none;
+            }
+
+            /* Hide user/account from top navbar on mobile — it's in the bottom bar */
+            .guest-user-dropdown,
+            .dropdown:has(.profile-btn) {
+                display: none;
+            }
+
             .products-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
@@ -1124,52 +1274,80 @@
             </li>
 
             <li class="{{ request()->is('about') ? 'active' : '' }}">
-                <a href="#">
+                <a href="{{ url('/about') }}">
                     <i class="ti ti-info-circle"></i> About
                 </a>
             </li>
 
             <li class="{{ request()->is('contact') ? 'active' : '' }}">
-                <a href="#">
+                <a href="{{ url('/contact') }}">
                     <i class="ti ti-phone"></i> Contact
                 </a>
             </li>
         </ul>
 
-        <div class="mob-bottom">
-            <div class="lang-select">
-                <i class="ti ti-world" style="font-size:15px;color:var(--orange)" aria-hidden="true"></i>
-                <select aria-label="Select language">
-                    <option>EN</option>
-                    <option>KH</option>
-                    <option>FR</option>
-                    <option>ZH</option>
-                    <option>JP</option>
-                </select>
-                <i class="ti ti-chevron-down" style="font-size:11px;color:#aaa" aria-hidden="true"></i>
-            </div>
+        <div class="mob-bottom" style="flex-direction: column; align-items: stretch;">
             @auth
-            <div class="d-flex flex-column gap-2 w-100 mt-2">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="avatar">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
-                    <span style="font-size:13px;font-weight:600">{{ Auth::user()->name }}</span>
+            {{-- User card --}}
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--orange-pale); border-radius:12px; margin-bottom:10px;">
+                <div class="avatar" style="width:38px;height:38px;font-size:13px;">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
+                <div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-dark);">{{ Auth::user()->name }}</div>
+                    <div style="font-size:11px;color:var(--text-muted);">{{ Auth::user()->is_admin ? 'Admin' : 'Member' }}</div>
                 </div>
+            </div>
+
+            {{-- Language --}}
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <div class="lang-select">
+                    <i class="ti ti-world" style="font-size:15px;color:var(--orange)" aria-hidden="true"></i>
+                    <select aria-label="Select language">
+                        <option>EN</option>
+                        <option>KH</option>
+                        <option>FR</option>
+                        <option>ZH</option>
+                        <option>JP</option>
+                    </select>
+                    <i class="ti ti-chevron-down" style="font-size:11px;color:#aaa" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            {{-- Action buttons --}}
+            <div style="display:flex; flex-direction:column; gap:8px;">
                 @if(Auth::user()->is_admin)
-                <a href="{{ url('/admin') }}" class="btn btn-outline-warning rounded-pill text-center py-2" style="font-size:13px; border-color: var(--orange); color: var(--orange);">
-                    <i class="ti ti-layout-dashboard align-middle me-1"></i> Admin Dashboard
+                <a href="{{ url('/admin') }}" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:1.5px solid var(--orange);border-radius:12px;font-size:13px;font-weight:600;color:var(--orange);background:transparent;text-decoration:none;transition:all .2s;">
+                    <i class="ti ti-layout-dashboard" style="font-size:16px;"></i> Admin Dashboard
                 </a>
                 @endif
-                <form action="{{ url('/logout') }}" method="POST" class="d-inline">
+                <form action="{{ url('/logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-warning text-white rounded-pill w-100 py-2" style="font-size:13px; background-color: var(--orange); border-color: var(--orange);">
-                        <i class="ti ti-logout align-middle me-1"></i> Log Out
+                    <button type="submit" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:none;border-radius:12px;font-size:13px;font-weight:600;color:#fff;background:var(--orange);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;">
+                        <i class="ti ti-logout" style="font-size:16px;"></i> Log Out
                     </button>
                 </form>
             </div>
             @else
-            <div class="d-flex gap-2 w-100 mt-2">
-                <a href="{{ url('/login') }}" class="btn btn-outline-warning rounded-pill flex-grow-1 text-center py-2" style="font-size:13px; border-color: var(--orange); color: var(--orange);">Login</a>
-                <a href="{{ url('/register') }}" class="btn btn-warning text-white rounded-pill flex-grow-1 text-center py-2" style="font-size:13px; background-color: var(--orange); border-color: var(--orange);">Register</a>
+            {{-- Guest: Language + Login/Register --}}
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <div class="lang-select">
+                    <i class="ti ti-world" style="font-size:15px;color:var(--orange)" aria-hidden="true"></i>
+                    <select aria-label="Select language">
+                        <option>EN</option>
+                        <option>KH</option>
+                        <option>FR</option>
+                        <option>ZH</option>
+                        <option>JP</option>
+                    </select>
+                    <i class="ti ti-chevron-down" style="font-size:11px;color:#aaa" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <a href="{{ url('/login') }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;border:1.5px solid var(--orange);border-radius:12px;font-size:13px;font-weight:600;color:var(--orange);background:transparent;text-decoration:none;transition:all .2s;">
+                    <i class="ti ti-login" style="font-size:16px;"></i> Login
+                </a>
+                <a href="{{ url('/register') }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;border:none;border-radius:12px;font-size:13px;font-weight:600;color:#fff;background:var(--orange);text-decoration:none;transition:background .2s;">
+                    <i class="ti ti-user-plus" style="font-size:16px;"></i> Register
+                </a>
             </div>
             @endauth
         </div>
@@ -1203,11 +1381,11 @@
                 </li>
 
                 <li class="{{ request()->is('about') ? 'active' : '' }}">
-                    <a href="#">About</a>
+                    <a href="{{ url('/about') }}">About</a>
                 </li>
 
                 <li class="{{ request()->is('contact') ? 'active' : '' }}">
-                    <a href="#">Contact</a>
+                    <a href="{{ url('/contact') }}">Contact</a>
                 </li>
             </ul>
             {{-- Search (desktop) --}}
@@ -1274,9 +1452,25 @@
                 </ul>
             </div>
             @else
-            <div class="d-flex align-items-center gap-2">
-                <a href="{{ url('/login') }}" class="nav-link fw-semibold" style="font-size:13.5px; color:#444;">Login</a>
-                <a href="{{ url('/register') }}" class="btn btn-warning text-white rounded-pill px-3 py-1.5" style="font-size:13px; background-color: var(--orange); border-color: var(--orange);">Register</a>
+            <div class="dropdown guest-user-dropdown">
+                <button class="icon-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account">
+                    <i class="ti ti-user" aria-hidden="true"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ url('/login') }}">
+                            <i class="ti ti-login"></i> Login
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url('/register') }}">
+                            <i class="ti ti-user-plus"></i> Register
+                        </a>
+                    </li>
+                </ul>
             </div>
             @endauth
 
@@ -1302,6 +1496,131 @@
     @endif
 
     @yield('content')
+
+    @if(request()->is('/'))
+    {{-- Premium Footer with Google Maps --}}
+    <footer style="margin-bottom: 60px;">
+        <div class="container">
+            <div class="row g-4 text-start">
+
+                {{-- Column 1: Brand Info --}}
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="fw-bold mb-3" style="font-family: 'Syne', sans-serif;"><span style="color: var(--orange);">Zest</span><span style="color: #fff;">Shop</span></h4>
+                    <p class="mb-4" style="line-height: 1.6; color: #8e8e93; font-size: 13.5px;">
+                        Your ultimate destination for premium clothing and accessories. We deliver unmatched quality with a modern digital shopping experience.
+                    </p>
+                    <div class="d-flex">
+                        <a href="#" class="social-link" aria-label="Facebook"><i class="ti ti-brand-facebook"></i></a>
+                        <a href="#" class="social-link" aria-label="Instagram"><i class="ti ti-brand-instagram"></i></a>
+                        <a href="#" class="social-link" aria-label="Twitter"><i class="ti ti-brand-twitter"></i></a>
+                        <a href="#" class="social-link" aria-label="Youtube"><i class="ti ti-brand-youtube"></i></a>
+                    </div>
+                </div>
+
+                {{-- Column 2: Quick Links --}}
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-2 mt-3">
+                        <li><a href="{{ url('/') }}">Home</a></li>
+                        <li><a href="{{ url('/shop') }}">Shop Catalog</a></li>
+                        <li><a href="{{ url('/delivery') }}">Track Delivery</a></li>
+                        <li><a href="{{ url('/about') }}">About Us</a></li>
+                        <li><a href="{{ url('/contact') }}">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                {{-- Column 3: Contact Details --}}
+                <div class="col-lg-3 col-md-6 col-6">
+                    <h5>Get in Touch</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 mt-3 text-muted" style="font-size: 13.5px;">
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="ti ti-map-pin text-warning mt-1" style="color: var(--orange) !important;"></i>
+                            <span>Phnom Penh, Cambodia</span>
+                        </li>
+                        <li class="d-flex align-items-center gap-2">
+                            <i class="ti ti-phone text-warning" style="color: var(--orange) !important;"></i>
+                            <span>+855 12 345 678</span>
+                        </li>
+                        <li class="d-flex align-items-center gap-2">
+                            <i class="ti ti-mail text-warning" style="color: var(--orange) !important;"></i>
+                            <span>support@zestshop.com</span>
+                        </li>
+                    </ul>
+                </div>
+
+                {{-- Column 4: Google Map --}}
+                <div class="col-lg-4 col-md-6">
+                    <h5>Our Location</h5>
+                    <div class="map-container mt-3">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d125064.29815049301!2d104.83226998638102!3d11.56847250426543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3109513dc76a6be3%3A0x9c010ee85ab525bb!2sPhnom%20Penh!5e0!3m2!1sen!2skh!4v1700000000000!5m2!1sen!2skh"
+                            width="100%"
+                            height="150"
+                            style="border:0;"
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- Footer Bottom --}}
+            <div class="footer-bottom text-center">
+                <p class="m-0 text-muted" style="font-size: 12.5px;">
+                    &copy; {{ date('Y') }} ZestShop. All rights reserved. Crafted with <i class="ti ti-heart-filled text-danger"></i> for modern shoppers.
+                </p>
+            </div>
+        </div>
+    </footer>
+    @endif
+
+    {{-- ════════════════════════════════
+     BOTTOM MOBILE NAV
+════════════════════════════════ --}}
+    <nav class="bottom-nav" aria-label="Mobile bottom navigation">
+        <ul>
+            <li class="{{ request()->is('/') ? 'active' : '' }}">
+                <a href="{{ url('/') }}">
+                    <i class="ti ti-home" aria-hidden="true"></i>
+                    Home
+                </a>
+            </li>
+            <li class="{{ request()->is('shop') ? 'active' : '' }}">
+                <a href="{{ url('/shop') }}">
+                    <i class="ti ti-search" aria-hidden="true"></i>
+                    Shop
+                </a>
+            </li>
+            <li>
+                <a href="{{ url('cart') }}">
+                    <i class="ti ti-shopping-cart" aria-hidden="true"></i>
+                    <span class="bnav-badge" id="cart-count-bottom">{{ count(session('cart', [])) }}</span>
+                    Cart
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="ti ti-heart" aria-hidden="true"></i>
+                    Favorite
+                </a>
+            </li>
+            <li>
+                @auth
+                <a href="{{ url('/admin') }}">
+                    <i class="ti ti-user-circle" aria-hidden="true"></i>
+                    Account
+                </a>
+                @else
+                <a href="{{ url('/login') }}">
+                    <i class="ti ti-user-circle" aria-hidden="true"></i>
+                    Account
+                </a>
+                @endauth
+            </li>
+        </ul>
+    </nav>
 
 
 

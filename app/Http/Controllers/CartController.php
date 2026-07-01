@@ -147,7 +147,28 @@ class CartController extends Controller
         $service = 1.50;
         $delivery = 2.00;
         $tax = $subtotal * 0.10;
-        $grandTotal = $subtotal + $service + $delivery + $tax;
+
+        // Apply coupon discount
+        $appliedCoupon = session('applied_coupon');
+        $couponCode = null;
+        $couponDiscount = 0;
+
+        if ($appliedCoupon) {
+            $couponCode = $appliedCoupon['code'];
+            $couponDiscount = $appliedCoupon['discount'];
+
+            // Re-validate the coupon is still valid
+            $coupon = \App\Models\Coupon::where('code', $couponCode)->first();
+            if ($coupon && $coupon->isValid($subtotal)) {
+                $couponDiscount = $coupon->discountAmount($subtotal);
+                $coupon->increment('used_count');
+            } else {
+                $couponCode = null;
+                $couponDiscount = 0;
+            }
+        }
+
+        $grandTotal = max(0, $subtotal + $service + $delivery + $tax - $couponDiscount);
 
         // Generate unique order number
         do {
@@ -162,6 +183,8 @@ class CartController extends Controller
             'customer_phone' => $request->customer_phone,
             'customer_address' => $request->customer_address,
             'payment_method' => $request->payment_method,
+            'coupon_code' => $couponCode,
+            'discount' => $couponDiscount,
             'subtotal' => $subtotal,
             'service_fee' => $service,
             'delivery_fee' => $delivery,
@@ -194,8 +217,9 @@ class CartController extends Controller
             }
         }
 
-        // Clear cart
+        // Clear cart and coupon session
         session()->forget('cart');
+        session()->forget('applied_coupon');
         
         // Save order number in session for tracking
         session()->put('last_order_number', $orderNumber);

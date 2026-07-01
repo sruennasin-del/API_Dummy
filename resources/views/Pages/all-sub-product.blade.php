@@ -98,6 +98,7 @@
 
                 // ✅ update cart count instantly
                 $('#cart-count').text(res.cart_count);
+                $('#cart-count-bottom').text(res.cart_count);
 
             },
             error: function(err) {

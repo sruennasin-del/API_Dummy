@@ -155,6 +155,12 @@
                         <div class="d-flex justify-content-between mb-2"><span class="text-muted">Service Fee:</span><strong>${{ number_format($order->service_fee, 2) }}</strong></div>
                         <div class="d-flex justify-content-between mb-2"><span class="text-muted">Delivery:</span><strong>${{ number_format($order->delivery_fee, 2) }}</strong></div>
                         <div class="d-flex justify-content-between mb-2"><span class="text-muted">Tax (10%):</span><strong>${{ number_format($order->tax, 2) }}</strong></div>
+                        @if($order->discount > 0)
+                            <div class="d-flex justify-content-between mb-2" style="color: #16a34a;">
+                                <span><i class="ti ti-discount-2 me-1"></i>Coupon Discount ({{ $order->coupon_code }}):</span>
+                                <strong>-${{ number_format($order->discount, 2) }}</strong>
+                            </div>
+                        @endif
                         <div class="d-flex justify-content-between pt-2 border-top"><span class="fw-bold fs-5">Total:</span><strong class="fs-5" style="color: var(--orange);">${{ number_format($order->total, 2) }}</strong></div>
                     </div>
                 </div>
