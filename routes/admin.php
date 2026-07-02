@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\BoomPromotionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
@@ -26,9 +27,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::resource('orders', AdminOrderController::class);
     Route::resource('banners', BannerController::class);
     Route::resource('coupons', CouponController::class);
+    Route::resource('boom-promotions', BoomPromotionController::class);
     
     // Stock Inventory Routes
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('inventory/update-stock', [InventoryController::class, 'updateStock'])->name('inventory.update-stock');
     Route::post('inventory/bulk-update', [InventoryController::class, 'bulkUpdate'])->name('inventory.bulk-update');
+
+    // Sales Report Routes
+    Route::get('reports', [AdminController::class, 'reports'])->name('admin.reports');
+    Route::get('reports/all', [AdminController::class, 'reportAll'])->name('admin.reports.all');
+    Route::get('reports/pdf/{date}', [AdminController::class, 'reportPdf'])->name('admin.reports.pdf');
 });

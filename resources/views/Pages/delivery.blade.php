@@ -183,7 +183,11 @@
                         </div>
                         <div class="col-md-6">
                             <small class="text-muted d-block">Payment Method</small>
-                            <span class="badge bg-secondary px-3 py-2 fw-semibold">{{ strtoupper($order->payment_method) }}</span>
+                            @if(strtolower($order->payment_method) === 'cash' || strtolower($order->payment_method) === 'cod')
+                                <span class="badge bg-success px-3 py-2 fw-semibold"><i class="ti ti-truck me-1"></i> Cash on Delivery</span>
+                            @else
+                                <span class="badge bg-primary px-3 py-2 fw-semibold"><i class="ti ti-building-bank me-1"></i> Bank Transfer ({{ strtoupper($order->payment_method) }})</span>
+                            @endif
                         </div>
                         <div class="col-12">
                             <small class="text-muted d-block">Shipping Address</small>

@@ -100,9 +100,15 @@
                 $('#cart-count').text(res.cart_count);
                 $('#cart-count-bottom').text(res.cart_count);
 
+                if (typeof showToast === 'function') {
+                    showToast('Added to Cart', res.message || 'Product added to cart successfully.', 'success');
+                }
             },
             error: function(err) {
                 console.log(err);
+                if (typeof showToast === 'function') {
+                    showToast('Error', 'Failed to add to cart.', 'info');
+                }
             }
         });
 

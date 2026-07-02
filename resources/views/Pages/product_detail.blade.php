@@ -1,7 +1,7 @@
 @extends('layouts.welcome')
 
 @section('content')
-<div class="container py-5 mt-5">
+<div class="container pt-3 pb-5 mt-0">
     <div class="row">
         <!-- Left Column: Images -->
         <div class="col-md-6 mb-4">
@@ -28,18 +28,19 @@
 
             <!-- Color Selection -->
             <div class="mb-4">
-                <label class="form-label text-muted mb-2" style="font-size: 14px;">Color</label>
+                <label class="form-label text-muted mb-2" style="font-size: 14px;">Color: <span class="text-dark fw-semibold" id="selected-color-name"></span></label>
                 <div class="d-flex flex-wrap gap-3" id="color-selector">
                     @foreach($product->colorVariants as $variant)
                         @php
                             $firstImage = optional($variant->images->first())->image_path ?? 'https://via.placeholder.com/100';
                         @endphp
-                        <div class="color-box text-center cursor-pointer" 
-                             data-variant-id="{{ $variant->id }}"
-                             onclick="selectVariant({{ $variant->id }})"
-                             style="width: 70px; border: 1px solid #ddd; padding: 5px; cursor: pointer;">
-                            <img src="{{ $firstImage }}" alt="{{ $variant->color->name }}" class="img-fluid mb-1" style="height: 40px; object-fit: cover;">
-                            <div style="font-size: 11px; text-transform: lowercase;">{{ $variant->color->name }}</div>
+                        <div class="d-flex flex-column align-items-center gap-1">
+                            <div class="color-box cursor-pointer" 
+                                 data-variant-id="{{ $variant->id }}"
+                                 onclick="selectVariant({{ $variant->id }})">
+                                <img src="{{ $firstImage }}" alt="{{ $variant->color->name }}">
+                            </div>
+                            <span class="color-name text-muted" style="font-size: 11px; text-transform: lowercase;">{{ $variant->color->name }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -55,19 +56,19 @@
 
             <!-- Quantity & Add to Cart -->
             <div class="d-flex align-items-center gap-3 mt-4 mb-4">
-                <div class="input-group" style="width: 130px;">
-                    <button class="btn btn-outline-secondary" type="button" onclick="updateQty(-1)">-</button>
-                    <input type="text" class="form-control text-center" id="qty-input" value="1" readonly>
-                    <button class="btn btn-outline-secondary" type="button" onclick="updateQty(1)">+</button>
+                <div class="d-flex align-items-center qty-container" style="border: 1px solid var(--orange-border); border-radius: 30px; overflow: hidden; height: 38px; background: #fff; flex-shrink: 0;">
+                    <button class="btn p-0 d-flex align-items-center justify-content-center qty-control-btn" type="button" onclick="updateQty(-1)" style="width: 35px; height: 100%; border: none; background: transparent; color: var(--orange); font-size: 16px; font-weight: bold; border-radius: 0;">-</button>
+                    <input type="text" class="text-center" id="qty-input" value="1" readonly style="width: 40px; height: 100%; border: none; border-left: 1px solid var(--orange-border); border-right: 1px solid var(--orange-border); font-weight: 600; font-size: 14px; outline: none; background: transparent; color: var(--text-dark); border-radius: 0;">
+                    <button class="btn p-0 d-flex align-items-center justify-content-center qty-control-btn" type="button" onclick="updateQty(1)" style="width: 35px; height: 100%; border: none; background: transparent; color: var(--orange); font-size: 16px; font-weight: bold; border-radius: 0;">+</button>
                 </div>
-                <button class="btn px-4 py-2 text-white fw-bold w-100" onclick="addToCart()" style="background-color: #222; border-radius: 30px; letter-spacing: 1px;">
+                <button class="btn btn-add-to-cart px-4 py-2 text-white fw-bold w-100" onclick="addToCart()">
                     ADD TO CART
                 </button>
             </div>
 
             <!-- Social Share -->
             <div class="d-flex gap-3 text-muted mt-5">
-                <i class="ti ti-heart cursor-pointer" id="wishlist-btn" onclick="toggleWishlist({{ $product->id }})" style="font-size: 20px; transition: color 0.2s; {{ in_array($product->id, session()->get('wishlist', [])) ? 'color: #f44336;' : '' }}"></i>
+                <i class="ti {{ in_array($product->id, session()->get('wishlist', [])) ? 'ti-heart-filled text-danger' : 'ti-heart text-muted' }} cursor-pointer" id="wishlist-btn" onclick="toggleWishlist(event, {{ $product->id }}, this)" style="font-size: 22px; transition: all 0.2s;"></i>
                 <i class="ti ti-brand-facebook cursor-pointer" style="font-size: 20px;"></i>
                 <i class="ti ti-brand-twitter cursor-pointer" style="font-size: 20px;"></i>
                 <i class="ti ti-brand-google cursor-pointer" style="font-size: 20px;"></i>
@@ -93,8 +94,8 @@
                         <div class="elegant-info mt-3">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <h3 class="elegant-title m-0 text-truncate" style="max-width: 85%;">{{ $related->title }}</h3>
-                                <button class="elegant-wishlist-btn bg-transparent border-0 p-0 text-muted">
-                                    <i class="ti ti-heart"></i>
+                                <button class="elegant-wishlist-btn bg-transparent border-0 p-0" onclick="toggleWishlist(event, {{ $related->id }}, this)">
+                                    <i class="ti {{ in_array($related->id, session()->get('wishlist', [])) ? 'ti-heart-filled text-danger' : 'ti-heart text-muted' }}"></i>
                                 </button>
                             </div>
                             <div class="elegant-price text-muted">
@@ -143,10 +144,34 @@
     .elegant-swiper-btn.swiper-button-prev { left: 0px !important; }
     .elegant-swiper-btn.swiper-button-next { right: 0px !important; }
     .elegant-swiper-btn:after { font-size: 12px !important; font-weight: bold; }
-    .elegant-swiper-btn:hover { background-color: #222; opacity: 1; }
-
+    .elegant-swiper-btn:hover { background-color: var(--orange); opacity: 1; }
+ 
+    .color-box {
+        width: 55px;
+        height: 75px;
+        border: 1px solid #ddd;
+        padding: 0 !important;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+        transition: all 0.2s ease-in-out;
+    }
+    .color-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .color-box:hover {
+        border-color: #999;
+    }
     .color-box.active {
-        border: 2px solid #222 !important;
+        border: 2px solid var(--orange) !important;
+        box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--orange);
+    }
+    .color-box.active + .color-name {
+        color: var(--text-dark) !important;
+        font-weight: 600;
     }
     .size-btn {
         min-width: 40px;
@@ -162,9 +187,9 @@
         transition: all 0.2s;
     }
     .size-btn.active {
-        background: #222;
+        background: var(--orange);
         color: white;
-        border-color: #222;
+        border-color: var(--orange);
     }
     .thumb-img {
         width: 100%;
@@ -173,9 +198,30 @@
         border: 1px solid #ddd;
         cursor: pointer;
         border-radius: 4px;
+        transition: border-color 0.2s;
     }
     .thumb-img.active {
-        border: 2px solid #222;
+        border: 2px solid var(--orange);
+    }
+    .btn-add-to-cart {
+        background-color: var(--orange);
+        border-radius: 30px;
+        letter-spacing: 1px;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+    .btn-add-to-cart:hover {
+        background-color: var(--orange-dark);
+        color: #fff;
+    }
+    .btn-add-to-cart:active {
+        transform: scale(0.98);
+    }
+    .qty-control-btn {
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .qty-control-btn:hover {
+        background-color: var(--orange-light) !important;
+        color: var(--orange-dark) !important;
     }
 </style>
 @endpush
@@ -195,6 +241,12 @@
         // Highlight selected color box
         document.querySelectorAll('.color-box').forEach(el => el.classList.remove('active'));
         document.querySelector(`.color-box[data-variant-id="${variantId}"]`).classList.add('active');
+
+        // Update selected color name label
+        const selectedColorNameEl = document.getElementById('selected-color-name');
+        if (selectedColorNameEl && variant.color) {
+            selectedColorNameEl.innerText = variant.color.name;
+        }
 
         // Update Price safely
         document.getElementById('product-price').innerText = '$ ' + parseFloat('{{ $product->price ?? 0 }}').toFixed(2);
@@ -252,29 +304,7 @@
         input.value = val;
     }
 
-    function toggleWishlist(productId) {
-        fetch('/wishlist/toggle', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ id: productId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const btn = document.getElementById('wishlist-btn');
-            if(data.status === 'added') {
-                btn.style.color = '#f44336';
-            } else {
-                btn.style.color = '';
-            }
-            alert(data.message);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }
+
 
     function addToCart() {
         if (!currentVariantId) {
@@ -319,11 +349,19 @@
             if (cartCountBottom) {
                 cartCountBottom.innerText = data.cart_count;
             }
-            alert(data.message);
+            if (typeof showToast === 'function') {
+                showToast('Added to Cart', data.message, 'success');
+            } else {
+                alert(data.message);
+            }
         })
         .catch(error => {
             console.error('Error adding to cart:', error);
-            alert('Failed to add to cart.');
+            if (typeof showToast === 'function') {
+                showToast('Error', 'Failed to add to cart.', 'info');
+            } else {
+                alert('Failed to add to cart.');
+            }
         });
     }
 

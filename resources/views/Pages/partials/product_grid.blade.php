@@ -11,8 +11,8 @@
             <div class="elegant-info mt-3">
                 <div class="d-flex justify-content-between align-items-start mb-1">
                     <h3 class="elegant-title m-0 text-truncate" style="max-width: 85%;">{{ $product->title }}</h3>
-                    <button class="elegant-wishlist-btn bg-transparent border-0 p-0 text-muted">
-                        <i class="ti ti-heart"></i>
+                    <button class="elegant-wishlist-btn bg-transparent border-0 p-0" onclick="toggleWishlist(event, {{ $product->id }}, this)">
+                        <i class="ti {{ in_array($product->id, session()->get('wishlist', [])) ? 'ti-heart-filled text-danger' : 'ti-heart text-muted' }}"></i>
                     </button>
                 </div>
                 <div class="elegant-price text-muted">

@@ -10,6 +10,9 @@ use App\Http\Controllers\CouponController;
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 Route::get('/shop', [FrontendController::class, 'shop'])->name('frontend.shop');
+Route::get('/search/live', [FrontendController::class, 'liveSearch'])->name('frontend.search.live');
+Route::post('/wishlist/toggle', [FrontendController::class, 'toggleWishlist'])->name('frontend.wishlist.toggle');
+Route::get('/wishlist', [FrontendController::class, 'wishlist'])->name('frontend.wishlist');
 Route::get('/delivery', [TrackingController::class, 'index'])->name('delivery.track');
 Route::get('/about', [FrontendController::class, 'about'])->name('frontend.about');
 Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
@@ -27,7 +30,6 @@ Route::post('/cart/increase', [CartController::class, 'increaseQty']);
 Route::post('/cart/decrease', [CartController::class, 'decreaseQty']);
 Route::post('/cart/remove', [CartController::class, 'remove']);
 Route::post('/cart/clear', [CartController::class, 'clear']);
-Route::post('/wishlist/toggle', [CartController::class, 'addWishlist']);
 
 // Coupon AJAX Routes
 Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');

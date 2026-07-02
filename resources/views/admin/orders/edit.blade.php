@@ -150,7 +150,11 @@
 
                         <div>
                             <span class="text-muted d-block" style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Payment Method Selected</span>
-                            <span class="badge bg-secondary px-3 py-2 fw-semibold">{{ strtoupper($order->payment_method) }}</span>
+                            @if(strtolower($order->payment_method) === 'cash' || strtolower($order->payment_method) === 'cod')
+                                <span class="badge bg-success px-3 py-2 fw-semibold"><i class="ti ti-truck me-1"></i> Cash on Delivery</span>
+                            @else
+                                <span class="badge bg-primary px-3 py-2 fw-semibold"><i class="ti ti-building-bank me-1"></i> Bank Transfer ({{ strtoupper($order->payment_method) }})</span>
+                            @endif
                         </div>
 
                         <hr class="my-2" style="border-color: #eee;">

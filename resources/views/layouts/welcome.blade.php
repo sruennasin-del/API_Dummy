@@ -103,6 +103,37 @@
             position: relative;
         }
 
+        /* Wishlist button wrapper */
+        .wishlist-btn {
+            position: relative;
+        }
+
+        /* Wishlist count badge */
+        #wishlist-count {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: var(--orange);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 2px solid #fff;
+            line-height: 1;
+            transition: all 0.2s ease;
+        }
+
+        .wishlist-btn:hover #wishlist-count {
+            background: var(--orange-dark);
+            transform: scale(1.05);
+        }
+
         /* Cart count badge */
         #cart-count {
             position: absolute;
@@ -949,11 +980,11 @@
            FOOTER
         ═══════════════════════════════════════ */
         footer {
-            background: #18181b;
-            color: #a1a1aa;
+            background: var(--orange);
+            color: #ffffff;
             padding: 4rem 1.5rem 2rem 1.5rem;
             font-size: 14px;
-            border-top: 1px solid #27272a;
+            border-top: none;
         }
 
         footer h5 {
@@ -972,18 +1003,18 @@
             left: 0;
             width: 35px;
             height: 2px;
-            background: var(--orange);
+            background: #ffffff;
             border-radius: 2px;
         }
 
         footer a {
-            color: #a1a1aa;
+            color: rgba(255, 255, 255, 0.85);
             text-decoration: none;
             transition: all 0.2s ease;
         }
 
         footer a:hover {
-            color: var(--orange);
+            color: #ffffff;
             padding-left: 4px;
         }
 
@@ -991,7 +1022,7 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: #27272a;
+            background: rgba(255, 255, 255, 0.15);
             color: #ffffff;
             display: inline-flex;
             align-items: center;
@@ -1001,22 +1032,21 @@
         }
 
         footer .social-link:hover {
-            background: var(--orange);
-            color: #ffffff;
+            background: #ffffff;
+            color: var(--orange);
             transform: translateY(-3px);
             padding-left: 0;
-            /* Reset hover left padding */
         }
 
         footer .map-container {
             border-radius: 12px;
             overflow: hidden;
-            border: 2px solid #27272a;
+            border: 2px solid rgba(255, 255, 255, 0.25);
             height: 150px;
         }
 
         .footer-bottom {
-            border-top: 1px solid #27272a;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
             padding-top: 1.5rem;
             margin-top: 3rem;
             font-size: 13px;
@@ -1241,6 +1271,117 @@
                 font-size: 12.5px;
             }
         }
+
+        /* ─── LIVE SEARCH AUTOCOMPLETE ─── */
+        .live-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid var(--orange-border);
+            border-radius: 12px;
+            margin-top: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-height: 380px;
+            overflow-y: auto;
+            z-index: 1100;
+            padding: 8px;
+        }
+
+        .live-search-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .live-search-item:hover {
+            background: var(--orange-light);
+            color: var(--orange-dark);
+            transform: translateX(3px);
+        }
+
+        .live-search-item img {
+            width: 40px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--orange-border);
+            flex-shrink: 0;
+        }
+
+        .live-search-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .live-search-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .live-search-price {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px 0 0 0;
+        }
+
+        .live-search-empty {
+            padding: 16px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ─── TOAST NOTIFICATIONS ─── */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast-item {
+            background: #ffffff;
+            border-left: 4px solid var(--orange);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-dark);
+            min-width: 250px;
+            max-width: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+        .toast-item.toast-success {
+            border-left-color: #2ec4b6;
+        }
+        .toast-item.toast-info {
+            border-left-color: var(--orange);
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOutToast {
+            to { transform: translateY(-10px); opacity: 0; }
+        }
     </style>
 </head>
 
@@ -1249,9 +1390,10 @@
      MOBILE DRAWER MENU
 ════════════════════════════════ --}}
     <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Mobile navigation">
-        <form action="{{ url('/shop') }}" method="GET" class="mob-search">
+        <form action="{{ url('/shop') }}" method="GET" class="mob-search" style="position: relative;">
             <i class="ti ti-search" aria-hidden="true"></i>
-            <input type="search" name="q" value="{{ request('q') }}" placeholder="Search products…" aria-label="Search products" />
+            <input type="search" id="mobile-search-input" name="q" value="{{ request('q') }}" placeholder="Search products…" aria-label="Search products" autocomplete="off" />
+            <div id="mobile-search-dropdown" class="live-search-dropdown" style="display: none;"></div>
         </form>
         <ul>
             <li class="{{ request()->is('/') ? 'active' : '' }}">
@@ -1388,17 +1530,19 @@
                 </li>
             </ul>
             {{-- Search (desktop) --}}
-            <form action="{{ url('/shop') }}" method="GET" class="nav-search">
+            <form action="{{ url('/shop') }}" method="GET" class="nav-search ms-auto" style="position: relative;">
                 <i class="ti ti-search search-icon" aria-hidden="true"></i>
-                <input type="search" name="q" value="{{ request('q') }}" placeholder="Search products…" aria-label="Search products" />
+                <input type="search" id="header-search-input" name="q" value="{{ request('q') }}" placeholder="Search products…" aria-label="Search products" autocomplete="off" />
+                <div id="live-search-dropdown" class="live-search-dropdown" style="display: none;"></div>
             </form>
 
             {{-- Right Icons --}}
-            <a href="#" class="icon-btn d-hide ms-auto" aria-label="Notifications">
+            <a href="#" class="icon-btn d-hide" aria-label="Notifications">
                 <i class="ti ti-bell" aria-hidden="true"></i>
             </a>
-            <a href="#" class="icon-btn d-hide" aria-label="Wishlist">
+            <a href="{{ url('/wishlist') }}" class="icon-btn wishlist-btn d-hide" aria-label="Wishlist">
                 <i class="ti ti-heart" aria-hidden="true"></i>
+                <span id="wishlist-count" class="{{ count(session('wishlist', [])) > 0 ? '' : 'd-none' }}">{{ count(session('wishlist', [])) }}</span>
             </a>
             <a href="{{ url('cart') }}" class="icon-btn cart-btn">
                 <i class="ti ti-shopping-cart"></i>
@@ -1497,14 +1641,15 @@
     @yield('content')
 
     {{-- Premium Footer with Google Maps --}}
+    @if(request()->is('/'))
     <footer style="margin-bottom: 60px;">
         <div class="container">
             <div class="row g-4 text-start">
 
                 {{-- Column 1: Brand Info --}}
                 <div class="col-lg-3 col-md-6">
-                    <h4 class="fw-bold mb-3" style="font-family: 'Syne', sans-serif;"><span style="color: var(--orange);">Zest</span><span style="color: #fff;">Shop</span></h4>
-                    <p class="mb-4" style="line-height: 1.6; color: #8e8e93; font-size: 13.5px;">
+                    <h4 class="fw-bold mb-3" style="font-family: 'Syne', sans-serif;"><span style="color: #ffffff;">Zest</span><span style="color: rgba(255,255,255,0.75);">Shop</span></h4>
+                    <p class="mb-4" style="line-height: 1.6; color: rgba(255, 255, 255, 0.85); font-size: 13.5px;">
                         Your ultimate destination for premium clothing and accessories. We deliver unmatched quality with a modern digital shopping experience.
                     </p>
                     <div class="d-flex">
@@ -1530,17 +1675,17 @@
                 {{-- Column 3: Contact Details --}}
                 <div class="col-lg-3 col-md-6 col-6">
                     <h5>Get in Touch</h5>
-                    <ul class="list-unstyled d-flex flex-column gap-3 mt-3 text-muted" style="font-size: 13.5px;">
+                    <ul class="list-unstyled d-flex flex-column gap-3 mt-3 text-white" style="font-size: 13.5px;">
                         <li class="d-flex align-items-start gap-2">
-                            <i class="ti ti-map-pin text-warning mt-1" style="color: var(--orange) !important;"></i>
+                            <i class="ti ti-map-pin text-white mt-1"></i>
                             <span>Phnom Penh, Cambodia</span>
                         </li>
                         <li class="d-flex align-items-center gap-2">
-                            <i class="ti ti-phone text-warning" style="color: var(--orange) !important;"></i>
+                            <i class="ti ti-phone text-white"></i>
                             <span>+855 12 345 678</span>
                         </li>
                         <li class="d-flex align-items-center gap-2">
-                            <i class="ti ti-mail text-warning" style="color: var(--orange) !important;"></i>
+                            <i class="ti ti-mail text-white"></i>
                             <span>support@zestshop.com</span>
                         </li>
                     </ul>
@@ -1566,12 +1711,13 @@
 
             {{-- Footer Bottom --}}
             <div class="footer-bottom text-center">
-                <p class="m-0 text-muted" style="font-size: 12.5px;">
-                    &copy; {{ date('Y') }} ZestShop. All rights reserved. Crafted with <i class="ti ti-heart-filled text-danger"></i> for modern shoppers.
+                <p class="m-0 text-white-50" style="font-size: 12.5px;">
+                    &copy; {{ date('Y') }} ZestShop. All rights reserved. Crafted with <i class="ti ti-heart-filled text-white"></i> for modern shoppers.
                 </p>
             </div>
         </div>
     </footer>
+    @endif
 
     {{-- ════════════════════════════════
      BOTTOM MOBILE NAV
@@ -1598,8 +1744,9 @@
                 </a>
             </li>
             <li>
-                <a href="#">
+                <a href="{{ url('/wishlist') }}">
                     <i class="ti ti-heart" aria-hidden="true"></i>
+                    <span class="bnav-badge {{ count(session('wishlist', [])) > 0 ? '' : 'd-none' }}" id="wishlist-count-bottom">{{ count(session('wishlist', [])) }}</span>
                     Favorite
                 </a>
             </li>
@@ -1620,6 +1767,11 @@
     </nav>
 
 
+
+    {{-- jQuery --}}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    {{-- Bootstrap JS (requires jQuery or Popper; bundle includes Popper) --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         $(function() {
@@ -1727,12 +1879,169 @@
                 $(this).closest('li').addClass('active');
             });
 
+            // Live Search Logic (Desktop and Mobile)
+            function initLiveSearch(inputId, dropdownId) {
+                const $input = $('#' + inputId);
+                const $dropdown = $('#' + dropdownId);
+                let debounceTimeout;
+
+                $input.on('input', function () {
+                    const query = $(this).val().trim();
+                    clearTimeout(debounceTimeout);
+
+                    if (query.length < 2) {
+                        $dropdown.hide().empty();
+                        return;
+                    }
+
+                    debounceTimeout = setTimeout(() => {
+                        $.ajax({
+                            url: '/search/live',
+                            type: 'GET',
+                            data: { q: query },
+                            success: function (results) {
+                                $dropdown.empty();
+                                if (results.length > 0) {
+                                    results.forEach(product => {
+                                        const html = `
+                                            <a href="${product.url}" class="live-search-item">
+                                                <img src="${product.image}" alt="${product.title}">
+                                                <div class="live-search-info">
+                                                    <h4 class="live-search-title">${product.title}</h4>
+                                                    <p class="live-search-price">${product.price}</p>
+                                                </div>
+                                            </a>
+                                        `;
+                                        $dropdown.append(html);
+                                    });
+                                    $dropdown.slideDown(200);
+                                } else {
+                                    $dropdown.html('<div class="live-search-empty">No products found.</div>').slideDown(200);
+                                }
+                            },
+                            error: function () {
+                                $dropdown.hide();
+                            }
+                        });
+                    }, 250);
+                });
+
+                $(document).on('click', function (e) {
+                    if (!$(e.target).closest($input).length && !$(e.target).closest($dropdown).length) {
+                        $dropdown.hide();
+                    }
+                });
+
+                $input.on('focus', function () {
+                    if ($input.val().trim().length >= 2 && $dropdown.children().length > 0) {
+                        $dropdown.slideDown(200);
+                    }
+                });
+            }
+
+            initLiveSearch('header-search-input', 'live-search-dropdown');
+            initLiveSearch('mobile-search-input', 'mobile-search-dropdown');
+
         });
+
+        // Global Wishlist Toggle Logic (defined outside document ready for immediate availability)
+        window.toggleWishlist = function(event, productId, btn) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const $btn = $(btn);
+            const $icon = $btn.is('i') ? $btn : $btn.find('i');
+            
+            $.ajax({
+                url: "{{ url('/wishlist/toggle') }}",
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    id: productId
+                },
+                success: function(res) {
+                    if (res.status === 'added') {
+                        $icon.removeClass('ti-heart text-muted')
+                             .addClass('ti-heart-filled text-danger');
+                        
+                        showToast('Added to Favorites', res.message, 'success');
+                    } else {
+                        $icon.removeClass('ti-heart-filled text-danger')
+                             .addClass('ti-heart text-muted');
+                        
+                        showToast('Removed', res.message, 'info');
+                        
+                        if (window.location.pathname.indexOf('/wishlist') !== -1) {
+                            $btn.closest('.col-6').fadeOut(300, function() {
+                                $(this).remove();
+                                if ($('#product-grid-content .elegant-card').length === 0) {
+                                    $('#product-grid-content').html(`
+                                        <div class="text-muted text-center py-5">
+                                            <i class="ti ti-heart-broken" style="font-size: 48px; color: #ddd; margin-bottom: 15px; display: block;"></i>
+                                            <p>You haven't added any products to your favorites yet.</p>
+                                            <a href="/shop" class="btn btn-outline-orange mt-3 rounded-pill px-4">Shop Now</a>
+                                        </div>
+                                    `);
+                                }
+                            });
+                        }
+                    }
+                    
+                    updateWishlistCount(res.count);
+                },
+                error: function(err) {
+                    console.error('Error toggling wishlist:', err);
+                }
+            });
+        };
+
+        function updateWishlistCount(count) {
+            const $badge = $('#wishlist-count');
+            $badge.text(count);
+            if (count > 0) {
+                $badge.removeClass('d-none');
+            } else {
+                $badge.addClass('d-none');
+            }
+
+            const $badgeBottom = $('#wishlist-count-bottom');
+            $badgeBottom.text(count);
+            if (count > 0) {
+                $badgeBottom.removeClass('d-none');
+            } else {
+                $badgeBottom.addClass('d-none');
+            }
+        }
+
+        window.showToast = function(title, message, type = 'info') {
+            let container = $('.toast-container');
+            if (container.length === 0) {
+                container = $('<div class="toast-container"></div>').appendTo('body');
+            }
+            const itemClass = type === 'success' ? 'toast-success' : 'toast-info';
+            const toast = $(`
+                <div class="toast-item ${itemClass}">
+                    <div>
+                        <strong style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; color: ${type === 'success' ? '#2ec4b6' : 'var(--orange)'};">${title}</strong>
+                        <span>${message}</span>
+                    </div>
+                    <button style="background:none; border:none; color:#ccc; font-size:16px; font-weight:bold; cursor:pointer; padding: 0 0 0 10px;">&times;</button>
+                </div>
+            `);
+            
+            toast.find('button').on('click', function() {
+                toast.remove();
+            });
+            
+            container.append(toast);
+            setTimeout(() => {
+                toast.css('animation', 'fadeOutToast 0.3s ease-in forwards');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
     </script>
-    {{-- jQuery --}}
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-    {{-- Bootstrap JS (requires jQuery or Popper; bundle includes Popper) --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     @stack('js')
 </body>

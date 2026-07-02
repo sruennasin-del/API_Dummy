@@ -24,8 +24,9 @@ class FrontendController extends Controller
                         }])->get();
 
         $banners = \App\Models\Banner::active()->get();
+        $boomPromotion = \App\Models\BoomPromotion::where('status', 'active')->latest()->first();
                         
-        return view('Pages.home', compact('categories', 'collections', 'banners'));
+        return view('Pages.home', compact('categories', 'collections', 'banners', 'boomPromotion'));
     }
 
     public function collection($slug)
@@ -98,6 +99,40 @@ class FrontendController extends Controller
         return view('Pages.shop', compact('products'));
     }
 
+    public function liveSearch(Request $request)
+    {
+        $q = $request->query('q');
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $products = \App\Models\Product::where('status', 'active')
+            ->where('title', 'like', '%' . $q . '%')
+            ->take(6)
+            ->get(['id', 'title', 'slug', 'price', 'image']);
+
+        $results = [];
+        foreach ($products as $product) {
+            $imageUrl = $product->image ?? 'https://via.placeholder.com/100';
+            if ($imageUrl && 
+                !str_starts_with($imageUrl, 'http://') && 
+                !str_starts_with($imageUrl, 'https://') && 
+                !str_starts_with($imageUrl, '/storage/') && 
+                !str_starts_with($imageUrl, 'storage/')
+            ) {
+                $imageUrl = \Illuminate\Support\Facades\Storage::url($imageUrl);
+            }
+            $results[] = [
+                'title' => $product->title,
+                'url'   => route('frontend.product', $product->slug),
+                'price' => '$' . number_format($product->price, 2),
+                'image' => $imageUrl
+            ];
+        }
+
+        return response()->json($results);
+    }
+
     public function about()
     {
         return view('Pages.about');
@@ -106,5 +141,45 @@ class FrontendController extends Controller
     public function contact()
     {
         return view('Pages.contact');
+    }
+
+    public function toggleWishlist(Request $request)
+    {
+        $productId = (int) $request->input('id');
+        $product = \App\Models\Product::findOrFail($productId);
+
+        $wishlist = session()->get('wishlist', []);
+        $wishlist = array_map('intval', $wishlist);
+
+        if (in_array($productId, $wishlist, true)) {
+            $wishlist = array_values(array_filter($wishlist, function($id) use ($productId) {
+                return $id !== $productId;
+            }));
+            session()->put('wishlist', $wishlist);
+            $status = 'removed';
+            $message = '"' . $product->title . '" removed from favorites.';
+        } else {
+            $wishlist[] = $productId;
+            session()->put('wishlist', $wishlist);
+            $status = 'added';
+            $message = '"' . $product->title . '" added to favorites!';
+        }
+
+        return response()->json([
+            'status' => $status,
+            'message' => $message,
+            'count' => count($wishlist)
+        ]);
+    }
+
+    public function wishlist()
+    {
+        $wishlistIds = session()->get('wishlist', []);
+        $products = \App\Models\Product::where('status', 'active')
+            ->whereIn('id', $wishlistIds)
+            ->latest()
+            ->paginate(24);
+
+        return view('Pages.wishlist', compact('products'));
     }
 }

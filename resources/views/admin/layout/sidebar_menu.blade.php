@@ -7,6 +7,12 @@
                 <span>Dashboard Overview</span>
             </a>
         </li>
+        <li>
+            <a href="{{ route('admin.reports') }}" class="nav-item-link {{ request()->is('admin/reports*') ? 'active' : '' }}">
+                <i class="ti ti-file-analytics"></i>
+                <span>Sales Reports</span>
+            </a>
+        </li>
     </ul>
 
     <div class="menu-title mt-4">Store Management</div>
@@ -141,8 +147,8 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="submenu-link">
-                        <i class="ti ti-speakerphone me-1" style="font-size:12px;"></i> Flash Sales
+                    <a href="{{ url('/admin/boom-promotions') }}" class="submenu-link {{ request()->is('admin/boom-promotions*') ? 'active' : '' }}">
+                        <i class="ti ti-speakerphone me-1" style="font-size:12px;"></i> Boom Promotion
                     </a>
                 </li>
                 <li>

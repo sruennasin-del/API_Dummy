@@ -5,7 +5,7 @@
     
     <div class="mb-5">
         <h2 class="text-uppercase mb-4 border-bottom pb-2" style="font-weight: 900; font-size: clamp(20px, 5vw, 32px); font-family: 'Syne', sans-serif;">
-            {{ request()->filled('q') ? 'Search Results for "' . request('q') . '"' : 'All Products' }}
+            My Favorites
         </h2>
         
         <div id="product-grid-content">
@@ -13,16 +13,16 @@
                 @include('Pages.partials.product_grid', ['products' => $products])
             @else
                 <div class="text-muted text-center py-5">
-                    <i class="ti ti-search" style="font-size: 40px; color: #ddd; margin-bottom: 15px; display: block;"></i>
-                    <p>No products found matching your search.</p>
-                    <a href="{{ url('/shop') }}" class="btn btn-outline-orange mt-3 rounded-pill px-4">View All Products</a>
+                    <i class="ti ti-heart-broken" style="font-size: 48px; color: #ddd; margin-bottom: 15px; display: block;"></i>
+                    <p>You haven't added any products to your favorites yet.</p>
+                    <a href="{{ url('/shop') }}" class="btn btn-outline-orange mt-3 rounded-pill px-4">Shop Now</a>
                 </div>
             @endif
         </div>
         
         @if($products->hasPages())
         <div class="mt-5 d-flex justify-content-center">
-            {{ $products->appends(request()->query())->links('pagination::bootstrap-5') }}
+            {{ $products->links() }}
         </div>
         @endif
     </div>

@@ -96,9 +96,15 @@
                     </td>
                     <td class="fw-bold">${{ number_format($order->total, 2) }}</td>
                     <td>
-                        <span class="badge bg-secondary-subtle text-secondary px-2.5 py-1" style="font-size: 11px;">
-                            {{ strtoupper($order->payment_method) }}
-                        </span>
+                        @if(strtolower($order->payment_method) === 'cash' || strtolower($order->payment_method) === 'cod')
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1" style="font-size: 11.5px; font-weight: 600; color: #15803d !important; background-color: #f0fdf4 !important;">
+                                <i class="ti ti-truck me-1"></i> Cash on Delivery
+                            </span>
+                        @else
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1" style="font-size: 11.5px; font-weight: 600; color: #1d4ed8 !important; background-color: #eff6ff !important;">
+                                <i class="ti ti-building-bank me-1"></i> Bank Transfer ({{ strtoupper($order->payment_method) }})
+                            </span>
+                        @endif
                     </td>
                     <td>
                         @if($order->status === 'pending')

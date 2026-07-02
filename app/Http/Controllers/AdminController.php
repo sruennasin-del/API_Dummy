@@ -132,4 +132,51 @@ class AdminController extends Controller
         })->toArray();
         return view('admin.dashboard.dashboard', compact('stats', 'recentOrders', 'activities', 'popularProducts'));
     }
+
+    public function reports(Request $request)
+    {
+        $rawReports = Order::selectRaw('DATE(created_at) as date, COUNT(id) as total_orders, SUM(total) as total_sales')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->paginate(15);
+
+        $itemsSold = OrderItem::selectRaw('DATE(ec_orders.created_at) as date, SUM(ec_order_items.qty) as total_items')
+            ->join('ec_orders', 'ec_orders.id', '=', 'ec_order_items.order_id')
+            ->groupBy('date')
+            ->get()
+            ->pluck('total_items', 'date');
+
+        return view('admin.reports.index', compact('rawReports', 'itemsSold'));
+    }
+
+    public function reportPdf($date)
+    {
+        $orders = Order::with('items')
+            ->whereDate('created_at', $date)
+            ->get();
+
+        $totalSales = $orders->sum('total');
+        $totalOrders = $orders->count();
+        
+        $totalItems = OrderItem::join('ec_orders', 'ec_orders.id', '=', 'ec_order_items.order_id')
+            ->whereDate('ec_orders.created_at', $date)
+            ->sum('ec_order_items.qty');
+
+        return view('admin.reports.pdf', compact('orders', 'date', 'totalSales', 'totalOrders', 'totalItems'));
+    }
+
+    public function reportAll()
+    {
+        $orders = Order::with('items')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalSales = $orders->sum('total');
+        $totalOrders = $orders->count();
+        
+        $totalItems = OrderItem::sum('qty');
+        $date = 'All-Time';
+
+        return view('admin.reports.pdf', compact('orders', 'date', 'totalSales', 'totalOrders', 'totalItems'));
+    }
 }

@@ -114,8 +114,8 @@
     <div class="row g-4">
         @foreach($categories as $cat)
         @if($cat->layout_type == 'landscape')
-        {{-- Landscape: 2 per row on desktop (col-md-6) --}}
-        <div class="col-12 col-md-6">
+        {{-- Landscape: 2 per row on desktop (col-md-6) and mobile (col-6) --}}
+        <div class="col-6 col-md-6">
             <a href="{{ url('/sub-product/' . $cat->slug) }}" class="category-banner-card landscape">
                 <img src="{{ $cat->image ?? 'https://via.placeholder.com/800x400' }}" alt="{{ $cat->name }}">
                 <div class="banner-overlay">
@@ -125,7 +125,8 @@
             </a>
         </div>
         @else
-        <div class="col-12 col-md-4">
+        {{-- Portrait: 3 per row on desktop (col-md-4) and mobile (col-4) --}}
+        <div class="col-4 col-md-4">
             <a href="{{ route('frontend.category', $cat->slug) }}" class="category-banner-card portrait">
                 <img src="{{ $cat->image ?? 'https://via.placeholder.com/400x600' }}" alt="{{ $cat->name }}">
                 <div class="banner-overlay">
@@ -170,8 +171,8 @@
                     <div class="elegant-info mt-3">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <h3 class="elegant-title m-0 text-truncate" style="max-width: 85%;">{{ $product->title }}</h3>
-                            <button class="elegant-wishlist-btn bg-transparent border-0 p-0 text-muted">
-                                <i class="ti ti-heart"></i>
+                            <button class="elegant-wishlist-btn bg-transparent border-0 p-0" onclick="toggleWishlist(event, {{ $product->id }}, this)">
+                                <i class="ti {{ in_array($product->id, session()->get('wishlist', [])) ? 'ti-heart-filled text-danger' : 'ti-heart text-muted' }}"></i>
                             </button>
                         </div>
                         <div class="elegant-price text-muted">
@@ -222,8 +223,8 @@
                     <div class="elegant-info mt-3">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <h3 class="elegant-title m-0 text-truncate" style="max-width: 85%;">{{ $product->title }}</h3>
-                            <button class="elegant-wishlist-btn bg-transparent border-0 p-0 text-muted">
-                                <i class="ti ti-heart"></i>
+                            <button class="elegant-wishlist-btn bg-transparent border-0 p-0" onclick="toggleWishlist(event, {{ $product->id }}, this)">
+                                <i class="ti {{ in_array($product->id, session()->get('wishlist', [])) ? 'ti-heart-filled text-danger' : 'ti-heart text-muted' }}"></i>
                             </button>
                         </div>
                         <div class="elegant-price text-muted">
@@ -242,6 +243,39 @@
 </div>
 @endif
 @endforeach
+
+{{-- ════════════════════════════════
+         DRAGGABLE BOOM PROMOTION BADGE
+    ════════════════════════════════ --}}
+@if($boomPromotion)
+<div id="draggable-boom-badge" class="boom-floating-badge" style="display: none;">
+    <div class="boom-badge-inner" onclick="handleBoomClick(event)">
+        <!-- Dynamic Shape SVG -->
+        <svg viewBox="0 0 100 100" class="starburst-svg">
+            @if(($boomPromotion->shape ?? 'starburst') === 'starburst')
+                <polygon points="50,2 62,35 95,25 75,50 98,70 65,72 68,98 50,80 32,98 35,72 2,70 25,50 5,25 38,35" fill="var(--orange)" stroke="#fff" stroke-width="2.5" />
+            @elseif($boomPromotion->shape === 'circle')
+                <circle cx="50" cy="50" r="46" fill="var(--orange)" stroke="#fff" stroke-width="2.5" />
+            @elseif($boomPromotion->shape === 'heart')
+                <path d="M50,88 C50,88 90,56 90,32 C90,16 78,6 64,6 C55,6 50,14 50,14 C50,14 45,6 36,6 C22,6 10,16 10,32 C10,56 50,88 50,88 Z" fill="var(--orange)" stroke="#fff" stroke-width="2.5" />
+            @elseif($boomPromotion->shape === 'square')
+                <rect x="6" y="6" width="88" height="88" rx="16" fill="var(--orange)" stroke="#fff" stroke-width="2.5" />
+            @endif
+        </svg>
+        <div class="boom-badge-text">
+            @php
+                $words = explode(' ', $boomPromotion->title);
+                $titleWord = $words[0] ?? 'BOOM';
+                $percentWord = $words[1] ?? '50%';
+                $subWord = implode(' ', array_slice($words, 2)) ?: 'OFF';
+            @endphp
+            <span class="boom-title">{{ $titleWord }}</span>
+            <span class="boom-percent">{{ $percentWord }}</span>
+            <span class="boom-sub">{{ $subWord }}</span>
+        </div>
+    </div>
+</div>
+@endif
 
 @push('js')
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
@@ -302,6 +336,10 @@
                 $('#cart-count').text(res.cart_count);
                 $('#cart-count-bottom').text(res.cart_count);
 
+                if (typeof showToast === 'function') {
+                    showToast('Added to Cart', res.message || 'Product added to cart successfully.', 'success');
+                }
+
                 // Show success feedback
                 btn.html('<i class="ti ti-check text-success"></i> Added');
                 setTimeout(() => {
@@ -311,8 +349,113 @@
             error: function(err) {
                 console.log(err);
                 btn.html(originalText).prop('disabled', false);
+                if (typeof showToast === 'function') {
+                    showToast('Error', 'Failed to add to cart.', 'info');
+                }
             }
         });
+    });
+
+    // Draggable floating boom badge logic
+    document.addEventListener('DOMContentLoaded', function () {
+        const badge = document.getElementById('draggable-boom-badge');
+        if (!badge) return;
+
+        setTimeout(() => {
+            badge.style.display = 'block';
+        }, 1000);
+
+        let isDragging = false;
+        let dragStarted = false;
+        let startX, startY;
+        let initialX, initialY;
+
+        // Mouse Events
+        badge.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        // Touch Events (Mobile)
+        badge.addEventListener('touchstart', dragStart, { passive: true });
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            dragStarted = true;
+            isDragging = false; 
+            
+            let clientX, clientY;
+            if (e.type === 'touchstart') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            startX = clientX;
+            startY = clientY;
+
+            const rect = badge.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+        }
+
+        function drag(e) {
+            if (!dragStarted) return;
+            
+            let clientX, clientY;
+            if (e.type === 'touchmove') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                if (e.cancelable) e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            let dx = clientX - startX;
+            let dy = clientY - startY;
+
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                isDragging = true;
+            }
+
+            if (isDragging) {
+                let newX = initialX + dx;
+                let newY = initialY + dy;
+
+                const badgeWidth = badge.offsetWidth;
+                const badgeHeight = badge.offsetHeight;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+
+                if (newX < 10) newX = 10;
+                if (newX > windowWidth - badgeWidth - 10) newX = windowWidth - badgeWidth - 10;
+                if (newY < 10) newY = 10;
+                if (newY > windowHeight - badgeHeight - 10) newY = windowHeight - badgeHeight - 10;
+
+                badge.style.left = newX + 'px';
+                badge.style.top = newY + 'px';
+                badge.style.bottom = 'auto';
+                badge.style.right = 'auto';
+            }
+        }
+
+        function dragEnd(e) {
+            dragStarted = false;
+        }
+
+        window.handleBoomClick = function(e) {
+            if (isDragging) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            const targetUrl = "{{ $boomPromotion->link_url ?? '/shop' }}";
+            window.location.href = targetUrl;
+        };
+
     });
 </script>
 @endpush
@@ -479,6 +622,34 @@
         color: white;
     }
 
+    @media (max-width: 768px) {
+        .category-banners-container .row {
+            --bs-gutter-x: 0.5rem; /* reduce horizontal gap on mobile */
+            --bs-gutter-y: 0.5rem;
+        }
+        .category-banner-card.landscape img {
+            height: 120px;
+        }
+        .category-banner-card.portrait img {
+            height: 150px;
+        }
+        .banner-overlay {
+            padding: 10px;
+        }
+        .banner-overlay h3 {
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        .banner-overlay span {
+            font-size: 8px;
+            padding: 2px 6px;
+            gap: 2px;
+        }
+        .banner-overlay span i {
+            font-size: 8px;
+        }
+    }
+
     /* =========================
         MENU SECTION
     ========================== */
@@ -638,6 +809,93 @@
         .mobile-nav {
             display: flex;
         }
+    }
+
+    /* =========================
+        DRAGGABLE FLOATING BOOM BADGE
+    ========================== */
+    .boom-floating-badge {
+        position: fixed;
+        bottom: 120px;
+        right: 30px;
+        width: 100px;
+        height: 100px;
+        z-index: 10000;
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+        animation: floatPulse 3s ease-in-out infinite;
+    }
+    
+    .boom-floating-badge:active {
+        cursor: grabbing;
+        animation: none;
+    }
+    
+    .boom-badge-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .starburst-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+    
+    .boom-badge-text {
+        position: relative;
+        z-index: 2;
+        color: #ffffff;
+        text-align: center;
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        line-height: 0.9;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transform: rotate(-10deg);
+    }
+    
+    .boom-badge-text .boom-title {
+        font-size: 15px;
+        letter-spacing: -0.5px;
+        text-shadow: 1px 1px 0px var(--orange-dark), 2px 2px 0px rgba(0,0,0,0.2);
+    }
+    
+    .boom-badge-text .boom-percent {
+        font-size: 19px;
+        font-weight: 900;
+        text-shadow: 1px 1px 0px var(--orange-dark), 2px 2px 0px rgba(0,0,0,0.2);
+    }
+    
+    .boom-badge-text .boom-sub {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-shadow: 1px 1px 0px var(--orange-dark);
+    }
+    
+
+    
+    @keyframes floatPulse {
+        0% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-8px) scale(1.03); }
+        100% { transform: translateY(0) scale(1); }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 </style>
 
