@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <meta name="referrer" content="no-referrer" />
     <title>ZestShop — Welcome</title>
 
     {{-- Bootstrap 5 --}}
@@ -543,17 +544,12 @@
             font-weight: 700;
             line-height: 1.1;
             margin-bottom: 12px;
-        }
-
-        .slide-1 h1,
-        .slide-2 h1 {
             color: #fff;
             font-size: clamp(1.7rem, 4vw, 2.8rem);
         }
 
         .slide-3 h1 {
             color: #111;
-            font-size: clamp(1.7rem, 4vw, 2.8rem);
         }
 
         .slide p {
@@ -561,10 +557,6 @@
             line-height: 1.65;
             margin-bottom: 22px;
             max-width: 400px;
-        }
-
-        .slide-1 p,
-        .slide-2 p {
             color: rgba(255, 255, 255, .88);
         }
 
@@ -631,6 +623,13 @@
             top: 50%;
             transform: translateY(-50%);
             z-index: 1;
+            width: clamp(240px, 35vw, 480px);
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 14px;
         }
 
         .slide-img-box {
@@ -950,8 +949,8 @@
            FOOTER
         ═══════════════════════════════════════ */
         footer {
-            background: var(--orange);
-            color: #000000ff;
+            background: #18181b;
+            color: #a1a1aa;
             padding: 4rem 1.5rem 2rem 1.5rem;
             font-size: 14px;
             border-top: 1px solid #27272a;
@@ -1497,7 +1496,6 @@
 
     @yield('content')
 
-    @if(request()->is('/'))
     {{-- Premium Footer with Google Maps --}}
     <footer style="margin-bottom: 60px;">
         <div class="container">
@@ -1574,7 +1572,6 @@
             </div>
         </div>
     </footer>
-    @endif
 
     {{-- ════════════════════════════════
      BOTTOM MOBILE NAV

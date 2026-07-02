@@ -81,14 +81,16 @@ class ProductController extends Controller
             'status' => 'required|in:active,inactive',
             'colors' => 'nullable|array',
             'colors.*' => 'exists:ec_colors,id',
-            'sizes' => 'nullable|array',
-            'sizes.*' => 'exists:ec_sizes,id',
-            'detail_image_file_0' => 'nullable|image|max:2048',
-            'detail_image_file_1' => 'nullable|image|max:2048',
-            'detail_image_file_2' => 'nullable|image|max:2048',
-            'detail_image_0' => 'nullable|string|max:2048',
-            'detail_image_1' => 'nullable|string|max:2048',
-            'detail_image_2' => 'nullable|string|max:2048',
+            'variants' => 'nullable|array',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.sizes' => 'nullable|array',
+            'variants.*.sizes.*' => 'exists:ec_sizes,id',
+            'variants.*.detail_image_file_0' => 'nullable|image|max:2048',
+            'variants.*.detail_image_file_1' => 'nullable|image|max:2048',
+            'variants.*.detail_image_file_2' => 'nullable|image|max:2048',
+            'variants.*.detail_image_0' => 'nullable|string|max:2048',
+            'variants.*.detail_image_1' => 'nullable|string|max:2048',
+            'variants.*.detail_image_2' => 'nullable|string|max:2048',
         ]);
 
         $data = $request->only(['title', 'category_id', 'price', 'stock', 'description', 'status']);
@@ -115,38 +117,45 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
-        // Sync colors & collections
-        $product->colors()->sync($request->input('colors', []));
+        // Sync collections
         $product->collections()->sync($request->input('collections', []));
 
-        // Fallback: If no colors selected, assign to first color to hold sizes/images
-        $colorVariants = $product->colorVariants()->get();
-        if ($colorVariants->isEmpty() && \App\Models\Color::exists()) {
-            $product->colors()->sync([\App\Models\Color::first()->id]);
-            $colorVariants = $product->colorVariants()->get();
+        $variantsData = $request->input('variants', []);
+
+        // Fallback: If no colors selected/configured, assign to first color to hold sizes/images
+        if (empty($variantsData) && \App\Models\Color::exists()) {
+            $firstColorId = \App\Models\Color::first()->id;
+            $variantsData[$firstColorId] = [
+                'price' => null,
+                'sizes' => []
+            ];
         }
 
-        // Sync sizes to all variants
-        $sizeIds = $request->input('sizes', []);
-        foreach ($colorVariants as $variant) {
+        // Create the product color variants and sync their sizes/images
+        foreach ($variantsData as $colorId => $variantInfo) {
+            $variant = \App\Models\ProductColor::create([
+                'product_id' => $product->id,
+                'color_id' => $colorId,
+                'price' => !empty($variantInfo['price']) ? $variantInfo['price'] : null,
+            ]);
+
+            // Sync sizes for this variant
+            $sizeIds = $variantInfo['sizes'] ?? [];
             $variant->sizes()->sync($sizeIds);
-        }
 
-        // Handle 3 detail images (attach to the first active variant)
-        $firstVariant = $colorVariants->first();
-        if ($firstVariant) {
+            // Handle 3 detail images for this variant
             for ($i = 0; $i < 3; $i++) {
                 $imagePath = null;
-                if ($request->hasFile("detail_image_file_{$i}")) {
-                    $path = $request->file("detail_image_file_{$i}")->store('products/details', 'public');
+                if ($request->hasFile("variants.{$colorId}.detail_image_file_{$i}")) {
+                    $path = $request->file("variants.{$colorId}.detail_image_file_{$i}")->store('products/details', 'public');
                     $imagePath = '/storage/' . $path;
-                } elseif ($request->filled("detail_image_{$i}")) {
-                    $imagePath = $request->input("detail_image_{$i}");
+                } elseif (!empty($variantInfo["detail_image_{$i}"])) {
+                    $imagePath = $variantInfo["detail_image_{$i}"];
                 }
 
                 if ($imagePath) {
                     \App\Models\ProductImage::create([
-                        'product_color_id' => $firstVariant->id,
+                        'product_color_id' => $variant->id,
                         'image_path' => $imagePath,
                     ]);
                 }
@@ -196,14 +205,16 @@ class ProductController extends Controller
             'status' => 'required|in:active,inactive',
             'colors' => 'nullable|array',
             'colors.*' => 'exists:ec_colors,id',
-            'sizes' => 'nullable|array',
-            'sizes.*' => 'exists:ec_sizes,id',
-            'detail_image_file_0' => 'nullable|image|max:2048',
-            'detail_image_file_1' => 'nullable|image|max:2048',
-            'detail_image_file_2' => 'nullable|image|max:2048',
-            'detail_image_0' => 'nullable|string|max:2048',
-            'detail_image_1' => 'nullable|string|max:2048',
-            'detail_image_2' => 'nullable|string|max:2048',
+            'variants' => 'nullable|array',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.sizes' => 'nullable|array',
+            'variants.*.sizes.*' => 'exists:ec_sizes,id',
+            'variants.*.detail_image_file_0' => 'nullable|image|max:2048',
+            'variants.*.detail_image_file_1' => 'nullable|image|max:2048',
+            'variants.*.detail_image_file_2' => 'nullable|image|max:2048',
+            'variants.*.detail_image_0' => 'nullable|string|max:2048',
+            'variants.*.detail_image_1' => 'nullable|string|max:2048',
+            'variants.*.detail_image_2' => 'nullable|string|max:2048',
         ]);
 
         $data = $request->only(['title', 'category_id', 'price', 'stock', 'description', 'status']);
@@ -234,71 +245,95 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Sync colors & collections
-        $product->colors()->sync($request->input('colors', []));
+        // Sync collections
         $product->collections()->sync($request->input('collections', []));
 
-        // Ensure at least one color variant exists to hold sizes/images
-        $colorVariants = $product->colorVariants()->get();
-        if ($colorVariants->isEmpty() && \App\Models\Color::exists()) {
-            $product->colors()->sync([\App\Models\Color::first()->id]);
-            $colorVariants = $product->colorVariants()->get();
+        $variantsData = $request->input('variants', []);
+
+        // Fallback: If no colors selected, assign to first color to hold sizes/images
+        if (empty($variantsData) && \App\Models\Color::exists()) {
+            $firstColorId = \App\Models\Color::first()->id;
+            $variantsData[$firstColorId] = [
+                'price' => null,
+                'sizes' => []
+            ];
         }
 
-        // Sync sizes across all variants
-        $sizeIds = $request->input('sizes', []);
-        foreach ($colorVariants as $variant) {
+        $currentVariantIds = [];
+
+        foreach ($variantsData as $colorId => $variantInfo) {
+            // Find or create variant
+            $variant = \App\Models\ProductColor::updateOrCreate(
+                ['product_id' => $product->id, 'color_id' => $colorId],
+                ['price' => !empty($variantInfo['price']) ? $variantInfo['price'] : null]
+            );
+            $currentVariantIds[] = $variant->id;
+
+            // Sync sizes for this variant
+            $sizeIds = $variantInfo['sizes'] ?? [];
             $variant->sizes()->sync($sizeIds);
-        }
 
-        // Handle 3 detail images update
-        $existingImages = $product->images; // This works because of our new getImagesAttribute
-        $firstVariant = $colorVariants->first();
-        
-        for ($i = 0; $i < 3; $i++) {
-            $imagePath = null;
-            $hasNewInput = false;
+            // Handle 3 detail images for this variant
+            $existingImages = $variant->images()->orderBy('id')->get();
 
-            if ($request->hasFile("detail_image_file_{$i}")) {
-                $path = $request->file("detail_image_file_{$i}")->store('products/details', 'public');
-                $imagePath = '/storage/' . $path;
-                $hasNewInput = true;
-            } elseif ($request->filled("detail_image_{$i}")) {
-                $imagePath = $request->input("detail_image_{$i}");
+            for ($i = 0; $i < 3; $i++) {
+                $existingImage = $existingImages->get($i);
                 
-                // Only consider it new input if the URL actually changed!
-                $existingPath = $existingImage ? $existingImage->image_path : null;
-                if ($imagePath !== $existingPath) {
-                    $hasNewInput = true;
-                }
-            }
+                // Check if delete was requested
+                $shouldDelete = isset($variantInfo["delete_detail_{$i}"]) && $variantInfo["delete_detail_{$i}"] == '1';
 
-            $existingImage = $existingImages->get($i);
-
-            if ($hasNewInput) {
-                if ($existingImage) {
-                    if (str_starts_with($existingImage->image_path, '/storage/')) {
-                        $oldPath = str_replace('/storage/', '', $existingImage->image_path);
-                        Storage::disk('public')->delete($oldPath);
+                $newImagePath = null;
+                if ($request->hasFile("variants.{$colorId}.detail_image_file_{$i}")) {
+                    $path = $request->file("variants.{$colorId}.detail_image_file_{$i}")->store('products/details', 'public');
+                    $newImagePath = '/storage/' . $path;
+                } elseif (isset($variantInfo["detail_image_{$i}"])) {
+                    $inputUrl = $variantInfo["detail_image_{$i}"];
+                    // Only update if different or empty (if emptied and not deleted, we'll clear it)
+                    if (empty($inputUrl)) {
+                        $shouldDelete = true;
+                    } elseif (!$existingImage || $existingImage->image_path !== $inputUrl) {
+                        $newImagePath = $inputUrl;
                     }
-                    $existingImage->update(['image_path' => $imagePath]);
-                } elseif ($firstVariant) {
-                    \App\Models\ProductImage::create([
-                        'product_color_id' => $firstVariant->id,
-                        'image_path' => $imagePath,
-                    ]);
                 }
-            } else {
-                if ($request->boolean("delete_detail_{$i}")) {
+
+                if ($shouldDelete) {
                     if ($existingImage) {
                         if (str_starts_with($existingImage->image_path, '/storage/')) {
-                            $oldPath = str_replace('/storage/', '', $existingImage->image_path);
-                            Storage::disk('public')->delete($oldPath);
+                            Storage::disk('public')->delete(str_replace('/storage/', '', $existingImage->image_path));
                         }
                         $existingImage->delete();
                     }
+                } elseif ($newImagePath) {
+                    if ($existingImage) {
+                        // Delete old file if local
+                        if (str_starts_with($existingImage->image_path, '/storage/')) {
+                            Storage::disk('public')->delete(str_replace('/storage/', '', $existingImage->image_path));
+                        }
+                        $existingImage->update(['image_path' => $newImagePath]);
+                    } else {
+                        \App\Models\ProductImage::create([
+                            'product_color_id' => $variant->id,
+                            'image_path' => $newImagePath,
+                        ]);
+                    }
                 }
             }
+        }
+
+        // Delete variants that were removed
+        $deletedVariants = \App\Models\ProductColor::where('product_id', $product->id)
+            ->whereNotIn('id', $currentVariantIds)
+            ->get();
+
+        foreach ($deletedVariants as $deletedVariant) {
+            foreach ($deletedVariant->images as $delImage) {
+                if (str_starts_with($delImage->image_path, '/storage/')) {
+                    Storage::disk('public')->delete(str_replace('/storage/', '', $delImage->image_path));
+                }
+            }
+            $deletedVariant->sizes()->detach();
+            $deletedVariant->images()->delete();
+            $deletedVariant->delete();
         }
 
         return redirect('/admin/products')->with('success', 'Product updated successfully.');

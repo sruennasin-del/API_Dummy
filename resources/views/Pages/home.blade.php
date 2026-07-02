@@ -57,7 +57,7 @@
                 </div>
                 <div class="slide-img-area" aria-hidden="true">
                     @if($banner->image)
-                        <img src="{{ Storage::url($banner->image) }}" alt="{{ $banner->title }}"
+                        <img src="{{ (str_starts_with($banner->image, 'http://') || str_starts_with($banner->image, 'https://')) ? $banner->image : Storage::url($banner->image) }}" alt="{{ $banner->title }}"
                              style="width:100%;height:100%;object-fit:cover;border-radius:14px;max-height:340px;">
                     @else
                         <div class="slide-img-box">
