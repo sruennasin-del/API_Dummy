@@ -19,11 +19,17 @@ class TrackingController extends Controller
         $userOrders = collect();
 
         if (Auth::check()) {
-            $userOrders = Order::where('user_id', Auth::id())->latest()->get();
+            $userOrders = Order::where('user_id', Auth::id())
+                ->whereNotIn('status', ['cancelled', 'delivered'])
+                ->latest()
+                ->get();
         }
 
         if ($orderNumber) {
-            $order = Order::with('items')->where('order_number', $orderNumber)->first();
+            $order = Order::with('items')
+                ->where('order_number', $orderNumber)
+                ->whereNotIn('status', ['cancelled', 'delivered'])
+                ->first();
         } elseif ($userOrders->isNotEmpty()) {
             $order = $userOrders->first();
         }
@@ -67,14 +73,47 @@ class TrackingController extends Controller
 
         $orderNumber = trim($request->order_number);
         
-        $orderExists = Order::where('order_number', $orderNumber)->exists();
+        $orderExists = Order::where('order_number', $orderNumber)
+            ->whereNotIn('status', ['cancelled', 'delivered'])
+            ->exists();
 
         if (!$orderExists) {
             return redirect()->back()
-                ->with('error', 'Order number ' . $orderNumber . ' was not found. Please check and try again.')
+                ->with('error', 'Order number ' . $orderNumber . ' was not found or has been completed. Please check and try again.')
                 ->withInput();
         }
 
         return redirect()->route('delivery.track', ['order_number' => $orderNumber]);
+    }
+
+    /**
+     * Cancel the order.
+     */
+    public function cancel(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (in_array($order->status, ['delivered', 'cancelled'])) {
+            return redirect()->back()->with('error', 'Delivered or already cancelled orders cannot be cancelled.');
+        }
+
+        // Restore stock and decrement sales
+        foreach ($order->items as $item) {
+            if ($item->product_id) {
+                $product = \App\Models\Product::find($item->product_id);
+                if ($product) {
+                    $product->increment('stock', $item->qty);
+                    $product->decrement('sales', $item->qty);
+                }
+            }
+        }
+
+        $order->update([
+            'status' => 'cancelled',
+        ]);
+
+        return redirect()->route('delivery.track')->with('success', 'Your order has been successfully cancelled.');
     }
 }

@@ -19,7 +19,7 @@
         @endphp
         @foreach($categories as $cat)
         <li>
-            <a href="{{ url('/sub-product/' . $cat->slug) }}">
+            <a href="{{ route('frontend.category', $cat->slug) }}">
                 <i class="{{ $icons[$cat->slug] ?? 'ti ti-tag' }}" aria-hidden="true"></i>{{ $cat->name }}
             </a>
         </li>
@@ -116,7 +116,7 @@
         @if($cat->layout_type == 'landscape')
         {{-- Landscape: 2 per row on desktop (col-md-6) and mobile (col-6) --}}
         <div class="col-6 col-md-6">
-            <a href="{{ url('/sub-product/' . $cat->slug) }}" class="category-banner-card landscape">
+            <a href="{{ route('frontend.category', $cat->slug) }}" class="category-banner-card landscape">
                 <img src="{{ $cat->image ?? 'https://via.placeholder.com/800x400' }}" alt="{{ $cat->name }}">
                 <div class="banner-overlay">
                     <h3>{{ $cat->name }}</h3>

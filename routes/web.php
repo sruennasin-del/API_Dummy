@@ -17,12 +17,16 @@ Route::get('/delivery', [TrackingController::class, 'index'])->name('delivery.tr
 Route::get('/about', [FrontendController::class, 'about'])->name('frontend.about');
 Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
 Route::post('/delivery/track', [TrackingController::class, 'search'])->name('delivery.search');
+Route::post('/delivery/{order}/cancel', [TrackingController::class, 'cancel'])->name('delivery.cancel')->middleware('auth');
 Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout')->middleware('auth');
 
 Route::get('/category/{slug}', [FrontendController::class, 'category'])->name('frontend.category');
 Route::get('/category/{slug}/ajax', [FrontendController::class, 'categoryAjax'])->name('frontend.category.ajax');
 Route::get('/product/{slug}', [FrontendController::class, 'product'])->name('frontend.product');
 Route::get('/collection/{slug}', [FrontendController::class, 'collection'])->name('frontend.collection');
+
+Route::get('/sub-product/{slug}', [SubProsuctController::class, 'show'])->name('subproduct.show');
+Route::get('/all-sub-products', [SubProsuctController::class, 'showAll'])->name('subproduct.all');
 
 Route::post('/cart/add', [CartController::class, 'add']);
 Route::get('/cart', [CartController::class, 'cart']);

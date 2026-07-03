@@ -82,15 +82,15 @@
                                     <td>{{ $order['product'] }}</td>
                                     <td class="fw-bold text-dark">{{ $order['amount'] }}</td>
                                     <td>
-                                        @if($order['status'] === 'Completed')
+                                        @if($order['status'] === 'delivered')
                                             <span class="badge-premium badge-premium-success">
-                                                <i class="ti ti-circle-check-filled"></i> Completed
+                                                <i class="ti ti-circle-check-filled"></i> Delivered
                                             </span>
-                                        @elseif($order['status'] === 'Processing')
+                                        @elseif(in_array($order['status'], ['processed', 'shipped', 'enroute', 'arrived']))
                                             <span class="badge-premium badge-premium-info">
-                                                <i class="ti ti-loader"></i> Processing
+                                                <i class="ti ti-loader"></i> {{ ucfirst($order['status']) }}
                                             </span>
-                                        @elseif($order['status'] === 'Pending')
+                                        @elseif($order['status'] === 'pending')
                                             <span class="badge-premium badge-premium-warning">
                                                 <i class="ti ti-hourglass-empty"></i> Pending
                                             </span>

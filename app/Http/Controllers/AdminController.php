@@ -15,8 +15,8 @@ class AdminController extends Controller
     {
 
         // 1. Calculate Statistics
-        $totalRevenue = Order::where('status', 'Completed')->sum('total');
-        $ordersCount = Order::count();
+        $totalRevenue = Order::where('status', 'delivered')->sum('total');
+        $ordersCount = Order::where('status', '!=', 'cancelled')->count();
         $productsCount = Product::count();
         $customersCount = User::where('is_admin', false)->count();
         if ($customersCount === 0) {
@@ -135,13 +135,15 @@ class AdminController extends Controller
 
     public function reports(Request $request)
     {
-        $rawReports = Order::selectRaw('DATE(created_at) as date, COUNT(id) as total_orders, SUM(total) as total_sales')
+        $rawReports = Order::where('status', '!=', 'cancelled')
+            ->selectRaw('DATE(created_at) as date, COUNT(id) as total_orders, SUM(total) as total_sales')
             ->groupBy('date')
             ->orderBy('date', 'desc')
             ->paginate(15);
 
         $itemsSold = OrderItem::selectRaw('DATE(ec_orders.created_at) as date, SUM(ec_order_items.qty) as total_items')
             ->join('ec_orders', 'ec_orders.id', '=', 'ec_order_items.order_id')
+            ->where('ec_orders.status', '!=', 'cancelled')
             ->groupBy('date')
             ->get()
             ->pluck('total_items', 'date');
@@ -152,6 +154,7 @@ class AdminController extends Controller
     public function reportPdf($date)
     {
         $orders = Order::with('items')
+            ->where('status', '!=', 'cancelled')
             ->whereDate('created_at', $date)
             ->get();
 
@@ -159,6 +162,7 @@ class AdminController extends Controller
         $totalOrders = $orders->count();
         
         $totalItems = OrderItem::join('ec_orders', 'ec_orders.id', '=', 'ec_order_items.order_id')
+            ->where('ec_orders.status', '!=', 'cancelled')
             ->whereDate('ec_orders.created_at', $date)
             ->sum('ec_order_items.qty');
 
@@ -168,13 +172,16 @@ class AdminController extends Controller
     public function reportAll()
     {
         $orders = Order::with('items')
+            ->where('status', '!=', 'cancelled')
             ->orderBy('created_at', 'desc')
             ->get();
 
         $totalSales = $orders->sum('total');
         $totalOrders = $orders->count();
         
-        $totalItems = OrderItem::sum('qty');
+        $totalItems = OrderItem::join('ec_orders', 'ec_orders.id', '=', 'ec_order_items.order_id')
+            ->where('ec_orders.status', '!=', 'cancelled')
+            ->sum('qty');
         $date = 'All-Time';
 
         return view('admin.reports.pdf', compact('orders', 'date', 'totalSales', 'totalOrders', 'totalItems'));

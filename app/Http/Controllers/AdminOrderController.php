@@ -55,8 +55,35 @@ class AdminOrderController extends Controller
             'eta' => 'nullable|string|max:100',
         ]);
 
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
+
+        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
+            // Restore stock and decrement sales
+            foreach ($order->items as $item) {
+                if ($item->product_id) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->qty);
+                        $product->decrement('sales', $item->qty);
+                    }
+                }
+            }
+        } elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
+            // Re-deduct stock and increment sales if moving away from cancelled status
+            foreach ($order->items as $item) {
+                if ($item->product_id) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product) {
+                        $product->decrement('stock', $item->qty);
+                        $product->increment('sales', $item->qty);
+                    }
+                }
+            }
+        }
+
         $order->update([
-            'status' => $request->status,
+            'status' => $newStatus,
             'courier' => $request->courier,
             'tracking_number' => $request->tracking_number,
             'eta' => $request->eta,
@@ -70,6 +97,19 @@ class AdminOrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        // If order was not cancelled, restore stock and decrement sales before deleting
+        if ($order->status !== 'cancelled') {
+            foreach ($order->items as $item) {
+                if ($item->product_id) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->qty);
+                        $product->decrement('sales', $item->qty);
+                    }
+                }
+            }
+        }
+
         $order->delete();
         return redirect('/admin/orders')->with('success', 'Order deleted successfully.');
     }

@@ -63,6 +63,7 @@
                                     ✓
                                 </div>
                                 <span class="d-block mt-2 fw-semibold" style="font-size: 12px; color: {{ $currentStep >= 1 ? 'var(--text-dark)' : 'var(--text-muted)' }};">Placed</span>
+                                <small class="text-muted d-block mt-1" style="font-size: 10.5px; font-weight: 500;">{{ $order->created_at->format('d/m/Y') }}</small>
                             </div>
 
                             {{-- STEP 2: Processed --}}
@@ -95,6 +96,7 @@
                                     🏠
                                 </div>
                                 <span class="d-block mt-2 fw-semibold" style="font-size: 12px; color: {{ $currentStep >= 5 ? 'var(--text-dark)' : 'var(--text-muted)' }};">Delivered</span>
+                                <small class="text-muted d-block mt-1" style="font-size: 10.5px; font-weight: 500;">{{ $order->eta ?? 'Calculating...' }}</small>
                             </div>
 
                         </div>
@@ -121,6 +123,17 @@
                             @endif
                         </p>
                     </div>
+
+                    @if(!in_array($order->status, ['delivered', 'cancelled']) && Auth::check() && $order->user_id === Auth::id())
+                        <div class="mt-3 text-end">
+                            <form action="{{ route('delivery.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This will restore product stock.');">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-danger rounded-pill px-4 btn-sm" style="font-weight: 600;">
+                                    <i class="ti ti-x me-1"></i> Cancel Order
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- ORDER ITEMS --}}
