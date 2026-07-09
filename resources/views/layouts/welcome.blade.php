@@ -244,6 +244,78 @@
             pointer-events: none;
         }
 
+        /* Live Search Dropdown Styling */
+        .live-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid var(--orange-border);
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        
+        .live-search-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f9f9f9;
+        }
+        
+        .live-search-item:last-child {
+            border-bottom: none;
+        }
+        
+        .live-search-item:hover {
+            background-color: var(--orange-pale);
+            text-decoration: none;
+        }
+        
+        .live-search-item img {
+            width: 42px;
+            height: 42px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        
+        .live-search-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .live-search-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .live-search-price {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--orange);
+            margin: 0;
+        }
+        
+        .live-search-empty {
+            padding: 16px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12.5px;
+        }
+
         /* Icon buttons */
         .icon-btn {
             display: flex;
@@ -1793,70 +1865,78 @@
 
             /* ── Hero Slider ── */
             const $track = $('#slidesTrack');
-            const $dots = $('.dot');
-            const total = $dots.length;
-            let current = 0;
-            let autoPlay;
+            if ($track.length > 0) {
+                const $slides = $track.find('.slide');
+                const $dots = $('.dot');
+                const total = $slides.length;
+                let current = 0;
+                let autoPlay;
 
-            function goTo(index) {
-                current = (index + total) % total;
-                $track.css('transform', 'translateX(-' + (current * 100) + '%)');
-                $dots.each(function(i) {
-                    $(this)
-                        .toggleClass('active', i === current)
-                        .attr('aria-selected', (i === current).toString());
-                });
-            }
-
-            function next() {
-                goTo(current + 1);
-            }
-
-            function prev() {
-                goTo(current - 1);
-            }
-
-            function startAuto() {
-                stopAuto();
-                autoPlay = setInterval(next, 4500);
-            }
-
-            function stopAuto() {
-                clearInterval(autoPlay);
-            }
-
-            $('#nextBtn').on('click', function() {
-                next();
-                startAuto();
-            });
-            $('#prevBtn').on('click', function() {
-                prev();
-                startAuto();
-            });
-
-            $dots.on('click', function() {
-                goTo(parseInt($(this).data('slide')));
-                startAuto();
-            });
-
-            /* Touch swipe on slider */
-            let touchStartX = 0;
-            $track[0].addEventListener('touchstart', function(e) {
-                touchStartX = e.touches[0].clientX;
-            }, {
-                passive: true
-            });
-            $track[0].addEventListener('touchend', function(e) {
-                const diff = touchStartX - e.changedTouches[0].clientX;
-                if (Math.abs(diff) > 50) {
-                    diff > 0 ? next() : prev();
-                    startAuto();
+                function goTo(index) {
+                    if (total === 0) return;
+                    current = (index + total) % total;
+                    $track.css('transform', 'translateX(-' + (current * 100) + '%)');
+                    $dots.each(function(i) {
+                        $(this)
+                            .toggleClass('active', i === current)
+                            .attr('aria-selected', (i === current).toString());
+                    });
                 }
-            }, {
-                passive: true
-            });
 
-            startAuto();
+                function next() {
+                    goTo(current + 1);
+                }
+
+                function prev() {
+                    goTo(current - 1);
+                }
+
+                function startAuto() {
+                    stopAuto();
+                    if (total > 1) {
+                        autoPlay = setInterval(next, 4500);
+                    }
+                }
+
+                function stopAuto() {
+                    clearInterval(autoPlay);
+                }
+
+                $('#nextBtn').on('click', function() {
+                    next();
+                    startAuto();
+                });
+                $('#prevBtn').on('click', function() {
+                    prev();
+                    startAuto();
+                });
+
+                $dots.on('click', function() {
+                    goTo(parseInt($(this).data('slide')));
+                    startAuto();
+                });
+
+                /* Touch swipe on slider */
+                let touchStartX = 0;
+                if ($track[0]) {
+                    $track[0].addEventListener('touchstart', function(e) {
+                        touchStartX = e.touches[0].clientX;
+                    }, {
+                        passive: true
+                    });
+                    $track[0].addEventListener('touchend', function(e) {
+                        const diff = touchStartX - e.changedTouches[0].clientX;
+                        if (Math.abs(diff) > 50) {
+                            diff > 0 ? next() : prev();
+                            startAuto();
+                        }
+                    }, {
+                        passive: true
+                    });
+                }
+
+                startAuto();
+            }
 
             /* ── Language Switcher ── */
             $('#langSelect').on('change', function() {
@@ -2041,7 +2121,42 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         };
+
+        // SweetAlert2 Confirmation Dialog Handler
+        $(document).on('click', '.btn-confirm', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var $form = $btn.closest('form');
+            var title = $form.data('title') || 'Are you sure?';
+            var text = $form.data('text') || 'Do you want to proceed?';
+            var icon = $form.data('icon') || 'warning';
+            var confirmText = $form.data('confirm-text') || 'Yes, proceed';
+            
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                showCancelButton: true,
+                confirmButtonColor: 'var(--orange)',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'rounded-4 border-0 shadow-lg',
+                    confirmButton: 'btn btn-warning rounded-pill px-4 text-white',
+                    cancelButton: 'btn btn-outline-secondary rounded-pill px-4 ms-2'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $form.submit();
+                }
+            });
+        });
     </script>
+
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @stack('js')
 </body>

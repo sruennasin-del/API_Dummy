@@ -14,6 +14,35 @@
         </div>
     </div>
 
+    {{-- ALERT BANNER FOR REFUND REQUESTS --}}
+    @if($order->status === 'refund_requested')
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4 p-4 d-flex flex-wrap justify-content-between align-items-center" style="background-color: #fef3c7; color: #92400e;">
+        <div class="d-flex align-items-center gap-3">
+            <div class="p-3 rounded-circle bg-white text-warning d-flex align-items-center justify-content-center" style="width:50px; height:50px;">
+                <i class="ti ti-refresh-alert fs-3"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold mb-1" style="font-size: 16px;">Return / Refund Request Pending</h4>
+                <p class="mb-0 text-muted" style="font-size: 13.5px;">The customer has requested a return/refund for this order. Approving will restore the product stock levels.</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-sm-0">
+            <form action="{{ route('admin.orders.accept-refund', $order->id) }}" method="POST" class="confirm-form" data-title="Approve Refund?" data-text="This will return all items in this order to the inventory stock.">
+                @csrf
+                <button type="button" class="btn btn-success rounded-pill px-4 btn-confirm">
+                    <i class="ti ti-check me-1"></i> Accept Refund
+                </button>
+            </form>
+            <form action="{{ route('admin.orders.reject-refund', $order->id) }}" method="POST" class="confirm-form" data-title="Reject Request?" data-text="Are you sure you want to reject this refund request?">
+                @csrf
+                <button type="button" class="btn btn-outline-danger rounded-pill px-4 bg-white btn-confirm">
+                    <i class="ti ti-x me-1"></i> Reject Request
+                </button>
+            </form>
+        </div>
+    </div>
+    @endif
+
     <div class="row g-4">
         {{-- LEFT COLUMN: UPDATE ORDER FORM --}}
         <div class="col-lg-7">
@@ -34,9 +63,11 @@
                                     <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending (Order Placed)</option>
                                     <option value="processed" {{ $order->status === 'processed' ? 'selected' : '' }}>Processed (Preparing)</option>
                                     <option value="shipped" {{ $order->status === 'shipped' ? 'selected' : '' }}>Shipped (In Transit)</option>
-                                    <option value="enroute" {{ $order->status === 'enroute' ? 'selected' : '' }}>En Route (Local Carrier)</option>
+                                    <option value="enroute" {{ $order->status === 'enroute' ? 'selected' : '' }}>En Route (Local Courier)</option>
                                     <option value="arrived" {{ $order->status === 'arrived' ? 'selected' : '' }}>Arrived at Destination</option>
                                     <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>Delivered (Complete)</option>
+                                    <option value="refund_requested" {{ $order->status === 'refund_requested' ? 'selected' : '' }}>Return Requested</option>
+                                    <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Refunded (Stock Returned)</option>
                                     <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                                 </select>
                             </div>

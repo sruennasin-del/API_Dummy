@@ -49,7 +49,7 @@ class AdminOrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,processed,shipped,enroute,arrived,delivered,cancelled',
+            'status' => 'required|string|in:pending,processed,shipped,enroute,arrived,delivered,cancelled,refund_requested,refunded',
             'courier' => 'nullable|string|max:100',
             'tracking_number' => 'nullable|string|max:100',
             'eta' => 'nullable|string|max:100',
@@ -58,7 +58,9 @@ class AdminOrderController extends Controller
         $oldStatus = $order->status;
         $newStatus = $request->status;
 
-        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
+        $restoresStock = ['cancelled', 'refunded'];
+
+        if (in_array($newStatus, $restoresStock) && !in_array($oldStatus, $restoresStock)) {
             // Restore stock and decrement sales
             foreach ($order->items as $item) {
                 if ($item->product_id) {
@@ -69,8 +71,8 @@ class AdminOrderController extends Controller
                     }
                 }
             }
-        } elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
-            // Re-deduct stock and increment sales if moving away from cancelled status
+        } elseif (!in_array($newStatus, $restoresStock) && in_array($oldStatus, $restoresStock)) {
+            // Re-deduct stock and increment sales if moving away from cancelled/refunded status
             foreach ($order->items as $item) {
                 if ($item->product_id) {
                     $product = \App\Models\Product::find($item->product_id);
@@ -97,8 +99,8 @@ class AdminOrderController extends Controller
      */
     public function destroy(Order $order)
     {
-        // If order was not cancelled, restore stock and decrement sales before deleting
-        if ($order->status !== 'cancelled') {
+        // If order was not cancelled or refunded, restore stock and decrement sales before deleting
+        if (!in_array($order->status, ['cancelled', 'refunded'])) {
             foreach ($order->items as $item) {
                 if ($item->product_id) {
                     $product = \App\Models\Product::find($item->product_id);
@@ -112,5 +114,76 @@ class AdminOrderController extends Controller
 
         $order->delete();
         return redirect('/admin/orders')->with('success', 'Order deleted successfully.');
+    }
+
+    /**
+     * Display a listing of return/refund requests.
+     */
+    public function returnsIndex(Request $request)
+    {
+        $query = Order::query()
+            ->whereIn('status', ['refund_requested', 'refunded']);
+
+        // Search by order number, customer name, customer email
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        $orders = $query->latest()->paginate(10)->withQueryString();
+
+        return view('admin.orders.returns', compact('orders'));
+    }
+
+    /**
+     * Approve the refund and return items to stock.
+     */
+    public function acceptRefund(Order $order)
+    {
+        if ($order->status !== 'refund_requested') {
+            return redirect()->back()->with('error', 'Only refund requests can be accepted.');
+        }
+
+        // Restore stock and decrement sales
+        foreach ($order->items as $item) {
+            if ($item->product_id) {
+                $product = \App\Models\Product::find($item->product_id);
+                if ($product) {
+                    $product->increment('stock', $item->qty);
+                    $product->decrement('sales', $item->qty);
+                }
+            }
+        }
+
+        $order->update([
+            'status' => 'refunded'
+        ]);
+
+        return redirect()->back()->with('success', 'Refund request for order ' . $order->order_number . ' has been approved. Stock has been restored.');
+    }
+
+    /**
+     * Reject the refund request and restore status to delivered.
+     */
+    public function rejectRefund(Order $order)
+    {
+        if ($order->status !== 'refund_requested') {
+            return redirect()->back()->with('error', 'Only refund requests can be rejected.');
+        }
+
+        $order->update([
+            'status' => 'delivered'
+        ]);
+
+        return redirect()->back()->with('success', 'Refund request for order ' . $order->order_number . ' has been rejected. Order status is restored to Delivered.');
     }
 }

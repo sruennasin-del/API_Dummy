@@ -656,9 +656,43 @@
 
     {{-- Bootstrap 5 JS Bundle --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function() {
+            // SweetAlert2 Confirmation Dialog Handler
+            $(document).on('click', '.btn-confirm', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var $form = $btn.closest('form');
+                var title = $form.data('title') || 'Are you sure?';
+                var text = $form.data('text') || 'Do you want to proceed?';
+                var icon = $form.data('icon') || 'warning';
+                var confirmText = $form.data('confirm-text') || 'Yes, proceed';
+                
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon,
+                    showCancelButton: true,
+                    confirmButtonColor: '#FF6B1A',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: confirmText,
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        popup: 'rounded-4 border-0 shadow-lg',
+                        confirmButton: 'btn btn-warning rounded-pill px-4 text-white',
+                        cancelButton: 'btn btn-outline-secondary rounded-pill px-4 ms-2'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $form.submit();
+                    }
+                });
+            });
+
             // Toggle sidebar on mobile
             $('#sidebarToggle').on('click', function(e) {
                 e.stopPropagation();

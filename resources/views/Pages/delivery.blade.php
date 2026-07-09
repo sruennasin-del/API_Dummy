@@ -5,15 +5,17 @@
 
     {{-- ALERT MESSAGES --}}
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0 px-4 py-3 mb-4" role="alert" style="background-color: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5;">
-            <i class="ti ti-alert-triangle me-2 fs-5 align-middle"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0 px-4 py-3 mb-4 d-flex align-items-center" role="alert" style="background-color: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5;">
+            <i class="ti ti-alert-triangle me-2 fs-4 align-middle"></i>
+            <div class="fw-semibold">{{ session('error') }}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close" style="filter: invert(16%) sepia(85%) saturate(3195%) hue-rotate(345deg) brightness(85%) contrast(98%);"></button>
         </div>
     @endif
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 px-4 py-3 mb-4" role="alert" style="background-color: #DEF7EC; color: #03543F; border: 1px solid #BCF0DA;">
-            <i class="ti ti-circle-check me-2 fs-5 align-middle"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 px-4 py-3 mb-4 d-flex align-items-center" role="alert" style="background-color: #DEF7EC; color: #03543F; border: 1px solid #BCF0DA;">
+            <i class="ti ti-circle-check me-2 fs-4 align-middle"></i>
+            <div class="fw-semibold">{{ session('success') }}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close" style="filter: invert(24%) sepia(37%) saturate(3065%) hue-rotate(130deg) brightness(93%) contrast(92%);"></button>
         </div>
     @endif
 
@@ -118,18 +120,33 @@
                                 The courier has delivered your order. Thank you for choosing ZestShop!
                             @elseif($order->status === 'cancelled')
                                 <span class="text-danger fw-bold">This order has been cancelled.</span> If you believe this is a mistake, please contact customer support.
+                            @elseif($order->status === 'refund_requested')
+                                <span class="text-warning fw-bold">Return/Refund Requested.</span> We have received your request and our staff is currently reviewing it.
+                            @elseif($order->status === 'refunded')
+                                <span class="text-success fw-bold">Return Approved & Refunded.</span> The items have been returned to stock and your payment has been refunded.
                             @else
                                 Your order is being handled. Current status: {{ $order->status }}.
                             @endif
                         </p>
                     </div>
 
-                    @if(!in_array($order->status, ['delivered', 'cancelled']) && Auth::check() && $order->user_id === Auth::id())
+                    @if(!in_array($order->status, ['delivered', 'cancelled', 'refund_requested', 'refunded']) && Auth::check() && $order->user_id === Auth::id())
                         <div class="mt-3 text-end">
-                            <form action="{{ route('delivery.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This will restore product stock.');">
+                            <form action="{{ route('delivery.cancel', $order->id) }}" method="POST" class="confirm-form" data-title="Cancel Order?" data-text="Are you sure you want to cancel this order? This will restore product stock.">
                                 @csrf
-                                <button type="submit" class="btn btn-outline-danger rounded-pill px-4 btn-sm" style="font-weight: 600;">
+                                <button type="button" class="btn btn-outline-danger rounded-pill px-4 btn-sm btn-confirm" style="font-weight: 600;">
                                     <i class="ti ti-x me-1"></i> Cancel Order
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+
+                    @if($order->status === 'delivered' && Auth::check() && $order->user_id === Auth::id())
+                        <div class="mt-3 text-end">
+                            <form action="{{ route('delivery.refund', $order->id) }}" method="POST" class="confirm-form" data-title="Request Refund?" data-text="Are you sure you want to request a return/refund for this order? This will notify the admin to review your request.">
+                                @csrf
+                                <button type="button" class="btn btn-warning rounded-pill px-4 btn-sm text-white btn-confirm" style="font-weight: 600; background-color: var(--orange); border-color: var(--orange);">
+                                    <i class="ti ti-refresh-alert me-1"></i> Request Return/Refund
                                 </button>
                             </form>
                         </div>

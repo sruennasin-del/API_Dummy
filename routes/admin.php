@@ -25,6 +25,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::resource('sizes', SizeController::class);
     Route::resource('products', ProductController::class);
     Route::resource('orders', AdminOrderController::class);
+    Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('admin.returns.index');
+    Route::post('orders/{order}/accept-refund', [AdminOrderController::class, 'acceptRefund'])->name('admin.orders.accept-refund');
+    Route::post('orders/{order}/reject-refund', [AdminOrderController::class, 'rejectRefund'])->name('admin.orders.reject-refund');
     Route::resource('banners', BannerController::class);
     Route::resource('coupons', CouponController::class);
     Route::resource('boom-promotions', BoomPromotionController::class);

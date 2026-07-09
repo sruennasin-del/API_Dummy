@@ -36,8 +36,17 @@
 
         @if($banners->count() > 0)
             @foreach($banners as $i => $banner)
+            @php
+                $bgStyle = trim($banner->bg_gradient ?? ($banner->image ? '#222' : 'linear-gradient(130deg,#FF6B1A 0%,#FF9C5B 55%,#FFD6BB 100%)'));
+                if (str_starts_with($bgStyle, 'background:')) {
+                    $bgStyle = trim(substr($bgStyle, 11));
+                } elseif (str_starts_with($bgStyle, 'background-image:')) {
+                    $bgStyle = trim(substr($bgStyle, 17));
+                }
+                $bgStyle = rtrim($bgStyle, ';');
+            @endphp
             <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide {{ $i+1 }} of {{ $banners->count() }}"
-                 style="{{ $banner->image ? 'background: #222;' : 'background: ' . ($banner->bg_gradient ?? 'linear-gradient(130deg,#FF6B1A 0%,#FF9C5B 55%,#FFD6BB 100%)') . ';' }} min-height:420px;">
+                 style="background: {{ $bgStyle }}; min-height:420px;">
                 <div class="slide-body">
                     @if($banner->tag)<span class="slide-tag">{{ $banner->tag }}</span>@endif
                     <h1>{{ $banner->title }}@if($banner->subtitle)<br>{{ $banner->subtitle }}@endif</h1>

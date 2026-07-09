@@ -20,7 +20,7 @@ class TrackingController extends Controller
 
         if (Auth::check()) {
             $userOrders = Order::where('user_id', Auth::id())
-                ->whereNotIn('status', ['cancelled', 'delivered'])
+                ->whereNotIn('status', ['cancelled', 'delivered', 'refund_requested', 'refunded'])
                 ->latest()
                 ->get();
         }
@@ -28,7 +28,7 @@ class TrackingController extends Controller
         if ($orderNumber) {
             $order = Order::with('items')
                 ->where('order_number', $orderNumber)
-                ->whereNotIn('status', ['cancelled', 'delivered'])
+                ->whereNotIn('status', ['cancelled', 'refund_requested', 'refunded'])
                 ->first();
         } elseif ($userOrders->isNotEmpty()) {
             $order = $userOrders->first();
@@ -74,7 +74,7 @@ class TrackingController extends Controller
         $orderNumber = trim($request->order_number);
         
         $orderExists = Order::where('order_number', $orderNumber)
-            ->whereNotIn('status', ['cancelled', 'delivered'])
+            ->whereNotIn('status', ['cancelled', 'refund_requested', 'refunded'])
             ->exists();
 
         if (!$orderExists) {
@@ -110,10 +110,34 @@ class TrackingController extends Controller
             }
         }
 
+        // Clear session tracking for this order if active
+        if (session('last_order_number') === $order->order_number) {
+            session()->forget('last_order_number');
+        }
+
+        // Delete the order to completely remove it from the system
+        $order->delete();
+
+        return redirect()->route('delivery.track')->with('success', 'Your order has been successfully cancelled and removed.');
+    }
+
+    /**
+     * Request return/refund for the order.
+     */
+    public function requestRefund(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($order->status !== 'delivered') {
+            return redirect()->back()->with('error', 'Only delivered orders can be returned/refunded.');
+        }
+
         $order->update([
-            'status' => 'cancelled',
+            'status' => 'refund_requested'
         ]);
 
-        return redirect()->route('delivery.track')->with('success', 'Your order has been successfully cancelled.');
+        return redirect()->back()->with('success', 'Your return/refund request has been successfully submitted and is waiting for administrator approval.');
     }
 }

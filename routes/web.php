@@ -18,6 +18,7 @@ Route::get('/about', [FrontendController::class, 'about'])->name('frontend.about
 Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
 Route::post('/delivery/track', [TrackingController::class, 'search'])->name('delivery.search');
 Route::post('/delivery/{order}/cancel', [TrackingController::class, 'cancel'])->name('delivery.cancel')->middleware('auth');
+Route::post('/delivery/{order}/refund', [TrackingController::class, 'requestRefund'])->name('delivery.refund')->middleware('auth');
 Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout')->middleware('auth');
 
 Route::get('/category/{slug}', [FrontendController::class, 'category'])->name('frontend.category');

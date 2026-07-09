@@ -127,6 +127,14 @@
                         <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1" style="font-size: 11.5px; font-weight: 600; color: #166534 !important; background-color: #f0fdf4 !important;">
                             {{ ucfirst($order->status) }}
                         </span>
+                        @elseif($order->status === 'refund_requested')
+                        <span class="badge bg-warning-subtle text-warning rounded-pill px-2.5 py-1" style="font-size: 11.5px; font-weight: 600; color: #b45309 !important; background-color: #fef3c7 !important;">
+                            Return Requested
+                        </span>
+                        @elseif($order->status === 'refunded')
+                        <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1" style="font-size: 11.5px; font-weight: 600; color: #047857 !important; background-color: #d1fae5 !important;">
+                            Refunded
+                        </span>
                         @elseif($order->status === 'cancelled')
                         <span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1" style="font-size: 11.5px; font-weight: 600; color: #991b1b !important; background-color: #fef2f2 !important;">
                             Cancelled
@@ -152,19 +160,23 @@
                             <input type="hidden" name="tracking_number" value="{{ $order->tracking_number }}">
                             <input type="hidden" name="eta" value="{{ $order->eta }}">
                             <select name="status" onchange="this.form.submit()" class="form-select form-select-sm rounded-pill" style="font-size: 11.5px; width: auto; min-width: 135px; cursor: pointer;
-                                        {{ $order->status === 'pending' ? 'border-color:#f59e0b; color:#b45309; background-color:#fffbeb;' : '' }}
-                                        {{ $order->status === 'processed' ? 'border-color:#6366f1; color:#4338ca; background-color:#eef2ff;' : '' }}
-                                        {{ $order->status === 'shipped' ? 'border-color:#0ea5e9; color:#0284c7; background-color:#f0f9ff;' : '' }}
-                                        {{ $order->status === 'enroute' ? 'border-color:var(--orange); color:var(--orange); background-color:#fff7f0;' : '' }}
-                                        {{ in_array($order->status, ['arrived','delivered']) ? 'border-color:#16a34a; color:#15803d; background-color:#f0fdf4;' : '' }}
-                                        {{ $order->status === 'cancelled' ? 'border-color:#ef4444; color:#dc2626; background-color:#fef2f2;' : '' }}
-                                    ">
+                                         {{ $order->status === 'pending' ? 'border-color:#f59e0b; color:#b45309; background-color:#fffbeb;' : '' }}
+                                         {{ $order->status === 'processed' ? 'border-color:#6366f1; color:#4338ca; background-color:#eef2ff;' : '' }}
+                                         {{ $order->status === 'shipped' ? 'border-color:#0ea5e9; color:#0284c7; background-color:#f0f9ff;' : '' }}
+                                         {{ $order->status === 'enroute' ? 'border-color:var(--orange); color:var(--orange); background-color:#fff7f0;' : '' }}
+                                         {{ in_array($order->status, ['arrived','delivered']) ? 'border-color:#16a34a; color:#15803d; background-color:#f0fdf4;' : '' }}
+                                         {{ $order->status === 'refund_requested' ? 'border-color:#d97706; color:#b45309; background-color:#fef3c7;' : '' }}
+                                         {{ $order->status === 'refunded' ? 'border-color:#10b981; color:#047857; background-color:#ecfdf5;' : '' }}
+                                         {{ $order->status === 'cancelled' ? 'border-color:#ef4444; color:#dc2626; background-color:#fef2f2;' : '' }}
+                                     ">
                                 <option value="pending" {{ $order->status==='pending'    ? 'selected':'' }}>⏳ Pending</option>
                                 <option value="processed" {{ $order->status==='processed'  ? 'selected':'' }}>⚙️ Processed</option>
                                 <option value="shipped" {{ $order->status==='shipped'    ? 'selected':'' }}>📦 Shipped</option>
                                 <option value="enroute" {{ $order->status==='enroute'    ? 'selected':'' }}>🚚 En Route</option>
                                 <option value="arrived" {{ $order->status==='arrived'    ? 'selected':'' }}>📍 Arrived</option>
                                 <option value="delivered" {{ $order->status==='delivered'  ? 'selected':'' }}>✅ Delivered</option>
+                                <option value="refund_requested" {{ $order->status==='refund_requested' ? 'selected':'' }}>🔄 Return Requested</option>
+                                <option value="refunded" {{ $order->status==='refunded' ? 'selected':'' }}>💰 Refunded</option>
                                 <option value="cancelled" {{ $order->status==='cancelled'  ? 'selected':'' }}>❌ Cancelled</option>
                             </select>
                         </form>
@@ -176,10 +188,10 @@
                                 <i class="ti ti-pencil fs-5"></i>
                             </a>
 
-                            <form action="{{ url('/admin/orders/' . $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');" style="display: inline-block;">
+                            <form action="{{ url('/admin/orders/' . $order->id) }}" method="POST" class="confirm-form" data-title="Delete Order?" data-text="Are you sure you want to delete this order?" style="display: inline-block;">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-2 rounded-circle" style="color: #EF4444;" title="Delete Order">
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 p-2 rounded-circle btn-confirm" style="color: #EF4444;" title="Delete Order">
                                     <i class="ti ti-trash fs-5"></i>
                                 </button>
                             </form>

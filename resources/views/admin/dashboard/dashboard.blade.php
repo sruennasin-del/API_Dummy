@@ -94,6 +94,14 @@
                                             <span class="badge-premium badge-premium-warning">
                                                 <i class="ti ti-hourglass-empty"></i> Pending
                                             </span>
+                                        @elseif($order['status'] === 'refund_requested')
+                                            <span class="badge-premium badge-premium-warning" style="background-color: #fef3c7 !important; color: #d97706 !important;">
+                                                <i class="ti ti-refresh-alert"></i> Return Requested
+                                            </span>
+                                        @elseif($order['status'] === 'refunded')
+                                            <span class="badge-premium badge-premium-success" style="background-color: #d1fae5 !important; color: #065f46 !important;">
+                                                <i class="ti ti-refresh"></i> Refunded
+                                            </span>
                                         @else
                                             <span class="badge-premium badge-premium-danger">
                                                 <i class="ti ti-circle-x-filled"></i> Cancelled

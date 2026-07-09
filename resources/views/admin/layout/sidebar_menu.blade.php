@@ -97,7 +97,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="submenu-link">
+                    <a href="{{ route('admin.returns.index') }}" class="submenu-link {{ request()->routeIs('admin.returns.index') ? 'active' : '' }}">
                         <i class="ti ti-refresh-alert me-1" style="font-size:12px;"></i> Returns/Refunds
                     </a>
                 </li>
