@@ -173,7 +173,7 @@
             <div class="swiper-slide">
                 <article class="elegant-card">
                     <a href="{{ route('frontend.product', $product->slug) }}" class="text-decoration-none">
-                        <div class="elegant-img-wrapper">
+                        <div class="elegant-img-wrapper" data-collection="{{ $collection->name }}">
                             <img src="{{ $product->image ?? 'https://via.placeholder.com/400x600' }}" alt="{{ $product->title }}">
                         </div>
                     </a>
@@ -183,6 +183,9 @@
                             <button class="elegant-wishlist-btn bg-transparent border-0 p-0" onclick="toggleWishlist(event, {{ $product->id }}, this)">
                                 <i class="ti {{ in_array($product->id, session()->get('wishlist', [])) ? 'ti-heart-filled text-danger' : 'ti-heart text-muted' }}"></i>
                             </button>
+                        </div>
+                        <div class="collection-badge mb-2" style="font-size: 11px; color: #FF6B1A; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            {{ $collection->name }}
                         </div>
                         <div class="elegant-price text-muted">
                             ${{ number_format($product->price, 2) }}
@@ -225,7 +228,7 @@
             <div class="swiper-slide">
                 <article class="elegant-card">
                     <a href="{{ route('frontend.product', $product->slug) }}" class="text-decoration-none">
-                        <div class="elegant-img-wrapper">
+                        <div class="elegant-img-wrapper" data-collection="{{ $cat->name }}">
                             <img src="{{ $product->image ?? 'https://via.placeholder.com/400x600' }}" alt="{{ $product->title }}">
                         </div>
                     </a>
@@ -235,6 +238,9 @@
                             <button class="elegant-wishlist-btn bg-transparent border-0 p-0" onclick="toggleWishlist(event, {{ $product->id }}, this)">
                                 <i class="ti {{ in_array($product->id, session()->get('wishlist', [])) ? 'ti-heart-filled text-danger' : 'ti-heart text-muted' }}"></i>
                             </button>
+                        </div>
+                        <div class="collection-badge mb-2" style="font-size: 11px; color: #FF6B1A; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            {{ $cat->name }}
                         </div>
                         <div class="elegant-price text-muted">
                             ${{ number_format($product->price, 2) }}

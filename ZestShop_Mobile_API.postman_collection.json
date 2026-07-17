@@ -1,0 +1,753 @@
+{
+  "info": {
+    "_postman_id": "ec-mobile-api-collection",
+    "name": "ZestShop Mobile API",
+    "description": "Complete REST API collection for ZestShop Mobile App.\n\n**Base URL:** `http://localhost:8000/api`\n\n**Auth:** Laravel Sanctum Bearer Token\n\n**How to use:**\n1. Run `POST /auth/register` or `POST /auth/login`\n2. Copy the `token` from the response\n3. The collection auto-saves it to `{{token}}` via Test scripts\n4. All protected requests will automatically use it\n\n**Import Environment:** Import the `ZestShop_Environment.json` alongside this collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "description": "Authentication endpoints — register, login, logout, and profile management.",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.token) {",
+                  "    pm.collectionVariables.set('token', res.token);",
+                  "    pm.environment.set('token', res.token);",
+                  "    console.log('✅ Token saved:', res.token);",
+                  "}",
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Has token', () => pm.expect(res).to.have.property('token'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user. Returns a Bearer token.\n\n**Auto-saves token** to collection variable `{{token}}` via test script."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.token) {",
+                  "    pm.collectionVariables.set('token', res.token);",
+                  "    pm.environment.set('token', res.token);",
+                  "    console.log('✅ Token saved:', res.token);",
+                  "}",
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Has token', () => pm.expect(res).to.have.property('token'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with email and password. Returns a Bearer token.\n\n**Auto-saves token** to collection variable `{{token}}`."
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Get the authenticated user's profile. Requires Bearer token."
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"newemail@example.com\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Update name, email, or password. All fields are optional."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Revoke the current access token (logout)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏠 Home",
+      "description": "Single endpoint that returns all home screen data — banners, boom promotion, main categories with products, and collections.",
+      "item": [
+        {
+          "name": "Get Home Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/home",
+              "host": ["{{base_url}}"],
+              "path": ["home"]
+            },
+            "description": "Returns all data needed for the mobile home screen in one request:\n- `banners` — active banners\n- `boom_promotion` — active promotion\n- `main_categories` — active main categories with latest 10 products each\n- `collections` — active collections with latest 10 products each"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🖼️ Banners",
+      "description": "Banner and Boom Promotion endpoints.",
+      "item": [
+        {
+          "name": "Get All Banners",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/banners",
+              "host": ["{{base_url}}"],
+              "path": ["banners"]
+            },
+            "description": "Returns all active banners sorted by `sort_order`."
+          }
+        },
+        {
+          "name": "Get Active Promotion",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/promotions",
+              "host": ["{{base_url}}"],
+              "path": ["promotions"]
+            },
+            "description": "Returns the latest active Boom Promotion."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📂 Categories",
+      "description": "Main categories, sub-categories, and products by category.",
+      "item": [
+        {
+          "name": "Get Main Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories/main",
+              "host": ["{{base_url}}"],
+              "path": ["categories", "main"]
+            },
+            "description": "Returns all active main categories, each with their sub-categories nested inside."
+          }
+        },
+        {
+          "name": "Get All Sub-Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            },
+            "description": "Returns all active sub-categories with their parent main category info."
+          }
+        },
+        {
+          "name": "Get Products by Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories/1/products?sort=latest&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["categories", "1", "products"],
+              "query": [
+                { "key": "sort", "value": "latest", "description": "latest | price_asc | price_desc | popular | top_rated" },
+                { "key": "per_page", "value": "20", "description": "Max 50" }
+              ]
+            },
+            "description": "Returns paginated products for a given sub-category ID.\n\n**URL params:** Replace `1` with a real category ID.\n\n**Query params:**\n- `sort`: `latest` | `price_asc` | `price_desc` | `popular` | `top_rated`\n- `per_page`: 1–50 (default 20)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗂️ Collections",
+      "description": "Product collection browsing.",
+      "item": [
+        {
+          "name": "Get All Collections",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/collections",
+              "host": ["{{base_url}}"],
+              "path": ["collections"]
+            },
+            "description": "Returns all active product collections."
+          }
+        },
+        {
+          "name": "Get Products in Collection",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/collections/summer-sale/products?sort=latest&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["collections", "summer-sale", "products"],
+              "query": [
+                { "key": "sort", "value": "latest", "description": "latest | price_asc | price_desc | popular | top_rated" },
+                { "key": "per_page", "value": "20", "description": "Max 50" }
+              ]
+            },
+            "description": "Returns paginated products within a collection by slug.\n\n**URL params:** Replace `summer-sale` with a real collection slug."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛍️ Products",
+      "description": "Product listing, detail, and search.",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products?per_page=20&sort=latest",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "q", "value": "", "description": "Search keyword", "disabled": true },
+                { "key": "category_id", "value": "", "description": "Filter by sub-category ID", "disabled": true },
+                { "key": "min_price", "value": "", "description": "Minimum price", "disabled": true },
+                { "key": "max_price", "value": "", "description": "Maximum price", "disabled": true },
+                { "key": "sort", "value": "latest", "description": "latest | price_asc | price_desc | popular | top_rated" },
+                { "key": "per_page", "value": "20", "description": "1–50 (default 20)" }
+              ]
+            },
+            "description": "Returns paginated active products.\n\n**Optional query params:**\n- `q` — search by title\n- `category_id` — filter by sub-category\n- `min_price` / `max_price` — price range filter\n- `sort` — `latest` | `price_asc` | `price_desc` | `popular` | `top_rated`\n- `per_page` — 1–50"
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/search?q=nike",
+              "host": ["{{base_url}}"],
+              "path": ["products", "search"],
+              "query": [
+                { "key": "q", "value": "nike", "description": "Min 2 characters" }
+              ]
+            },
+            "description": "Live search products by title. Returns up to 10 results.\n\n**Requires** `q` param with minimum 2 characters."
+          }
+        },
+        {
+          "name": "Get Product Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/nike-air-max",
+              "host": ["{{base_url}}"],
+              "path": ["products", "nike-air-max"]
+            },
+            "description": "Returns full product detail including:\n- Color variants with sizes and images\n- Category and main category info\n- Related products (same category)\n\n**URL params:** Replace `nike-air-max` with a real product slug."
+          }
+        }
+      ]
+    },
+    {
+      "name": "❤️ Wishlist",
+      "description": "User wishlist management. Requires authentication.",
+      "item": [
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/wishlist",
+              "host": ["{{base_url}}"],
+              "path": ["wishlist"]
+            },
+            "description": "Returns all products in the authenticated user's wishlist."
+          }
+        },
+        {
+          "name": "Toggle Wishlist (Add / Remove)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/wishlist/toggle",
+              "host": ["{{base_url}}"],
+              "path": ["wishlist", "toggle"]
+            },
+            "description": "Add or remove a product from the wishlist.\n\nResponse `status` field will be either `\"added\"` or `\"removed\"`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Cart",
+      "description": "Shopping cart management. Cart is stored server-side per user (Laravel Cache). Requires authentication.",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cart",
+              "host": ["{{base_url}}"],
+              "path": ["cart"]
+            },
+            "description": "Returns current cart items and order summary (subtotal, service fee, delivery, tax, total)."
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.data && res.data.length > 0) {",
+                  "    var firstKey = Object.keys(res.data[0])[0];",
+                  "    var item = res.data[0];",
+                  "    var cartKey = item.id + '_' + item.variant_id + '_' + item.size_id;",
+                  "    pm.collectionVariables.set('cart_key', cartKey);",
+                  "    console.log('✅ cart_key saved:', cartKey);",
+                  "}",
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"variant_id\": 1,\n  \"size_id\": 1,\n  \"title\": \"Nike Air Max\",\n  \"price\": 49.99,\n  \"thumbnail\": \"https://via.placeholder.com/100\",\n  \"color_name\": \"Red\",\n  \"size_name\": \"M\",\n  \"qty\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cart/add",
+              "host": ["{{base_url}}"],
+              "path": ["cart", "add"]
+            },
+            "description": "Add an item to the cart. If the same variant+size already exists, quantity is increased.\n\n**Cart key** = `{id}_{variant_id}_{size_id}` — used in increase/decrease/remove requests.\n\n**Auto-saves `cart_key`** for the first item via test script."
+          }
+        },
+        {
+          "name": "Increase Qty",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_key\": \"{{cart_key}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cart/increase",
+              "host": ["{{base_url}}"],
+              "path": ["cart", "increase"]
+            },
+            "description": "Increase the quantity of a cart item by 1.\n\n`cart_key` format: `{product_id}_{variant_id}_{size_id}` e.g. `1_1_1`"
+          }
+        },
+        {
+          "name": "Decrease Qty",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_key\": \"{{cart_key}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cart/decrease",
+              "host": ["{{base_url}}"],
+              "path": ["cart", "decrease"]
+            },
+            "description": "Decrease the quantity of a cart item by 1. Minimum is 1 (will not go below 1)."
+          }
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_key\": \"{{cart_key}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cart/remove",
+              "host": ["{{base_url}}"],
+              "path": ["cart", "remove"]
+            },
+            "description": "Remove a specific item from the cart entirely."
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cart/clear",
+              "host": ["{{base_url}}"],
+              "path": ["cart", "clear"]
+            },
+            "description": "Remove all items from the cart and also removes any applied coupon."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Coupon",
+      "description": "Coupon code management. Requires authentication.",
+      "item": [
+        {
+          "name": "Apply Coupon",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE20\",\n  \"subtotal\": 100.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/coupon/apply",
+              "host": ["{{base_url}}"],
+              "path": ["coupon", "apply"]
+            },
+            "description": "Validate and apply a coupon code.\n\n- `code` — the coupon code (case-insensitive)\n- `subtotal` — the current cart subtotal (used to validate `min_order` requirement)\n\nReturns the discount amount and new total."
+          }
+        },
+        {
+          "name": "Remove Coupon",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/coupon/remove",
+              "host": ["{{base_url}}"],
+              "path": ["coupon", "remove"]
+            },
+            "description": "Remove the currently applied coupon code."
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 Checkout",
+      "description": "Place an order from cart. Requires authentication and non-empty cart.",
+      "item": [
+        {
+          "name": "Checkout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"John Doe\",\n  \"customer_email\": \"john@example.com\",\n  \"customer_phone\": \"012345678\",\n  \"customer_address\": \"123 Street, Phnom Penh, Cambodia\",\n  \"payment_method\": \"ABA\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["checkout"]
+            },
+            "description": "Place an order from the current cart.\n\n**Prerequisites:** Must have items in cart.\n\n**payment_method** options: `ABA` | `ACLEDA` | `Wing` | `Cash`\n\nOn success:\n- Creates the order in DB\n- Clears the cart\n- Decrements product stock\n- Increments product sales\n- Applies coupon if one was set (and increments coupon used_count)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Orders",
+      "description": "Order history and management. Requires authentication. Users can only see their own orders.",
+      "item": [
+        {
+          "name": "Get Order History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders?per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["orders"],
+              "query": [
+                { "key": "status", "value": "", "description": "pending | processing | shipped | delivered | cancelled | refund_requested | refunded", "disabled": true },
+                { "key": "per_page", "value": "15", "description": "Max 50" }
+              ]
+            },
+            "description": "Returns paginated order history for the authenticated user.\n\n**Query params:**\n- `status` — filter: `pending` | `processing` | `shipped` | `delivered` | `cancelled` | `refund_requested` | `refunded`\n- `per_page` — 1–50 (default 15)"
+          }
+        },
+        {
+          "name": "Get Order Detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/1",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "1"]
+            },
+            "description": "Returns full order detail including all order items.\n\n**URL params:** Replace `1` with a real order ID."
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/1/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "1", "cancel"]
+            },
+            "description": "Cancel an order. **Only works if status is `pending`.**\n\nReturns 422 if the order is already processing, shipped, or delivered."
+          }
+        },
+        {
+          "name": "Request Refund",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/1/refund",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "1", "refund"]
+            },
+            "description": "Request a refund for a delivered order. **Only works if status is `delivered`.**\n\nSets status to `refund_requested` for admin review."
+          }
+        }
+      ]
+    }
+  ]
+}

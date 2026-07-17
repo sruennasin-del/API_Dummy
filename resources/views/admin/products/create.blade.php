@@ -299,6 +299,128 @@
             // Dynamic variations handling
             const allSizes = @json($sizes);
             const oldVariants = @json(old('variants') ?? []);
+            window.variantImages = {};
+
+            function handleGalleryFiles(colorId, files) {
+                if (!window.variantImages[colorId]) {
+                    window.variantImages[colorId] = [];
+                }
+                const currentImages = window.variantImages[colorId];
+                let addedAny = false;
+                
+                for (let i = 0; i < files.length; i++) {
+                    if (currentImages.length >= 3) {
+                        alert('You can only upload up to 3 gallery images per variation.');
+                        break;
+                    }
+                    const file = files[i];
+                    const previewUrl = URL.createObjectURL(file);
+                    currentImages.push({
+                        type: 'file',
+                        file: file,
+                        previewUrl: previewUrl
+                    });
+                    addedAny = true;
+                }
+                
+                if (addedAny) {
+                    renderGallery(colorId);
+                    syncGalleryInputs(colorId);
+                }
+            }
+
+            function addGalleryUrl(colorId, url) {
+                if (!window.variantImages[colorId]) {
+                    window.variantImages[colorId] = [];
+                }
+                const currentImages = window.variantImages[colorId];
+                if (currentImages.length >= 3) {
+                    alert('You can only add up to 3 gallery images per variation.');
+                    return;
+                }
+                
+                currentImages.push({
+                    type: 'url',
+                    url: url
+                });
+                
+                renderGallery(colorId);
+                syncGalleryInputs(colorId);
+            }
+
+            window.removeGalleryItem = function(colorId, index) {
+                const currentImages = window.variantImages[colorId] || [];
+                const removedItem = currentImages[index];
+                
+                if (removedItem && removedItem.type === 'file' && removedItem.previewUrl) {
+                    URL.revokeObjectURL(removedItem.previewUrl);
+                }
+                
+                currentImages.splice(index, 1);
+                renderGallery(colorId);
+                syncGalleryInputs(colorId);
+            };
+
+            function renderGallery(colorId) {
+                const currentImages = window.variantImages[colorId] || [];
+                const $previewsContainer = $(`#gallery-previews-${colorId}`);
+                $previewsContainer.empty();
+                
+                currentImages.forEach((img, idx) => {
+                    const previewSrc = img.type === 'file' ? img.previewUrl : img.url;
+                    const sourceText = img.type === 'file' ? `File: ${img.file.name}` : `URL: ${img.url}`;
+                    const sourceBadge = img.type === 'file' ? 'Local' : (img.type === 'db' ? 'Saved' : 'URL');
+                    
+                    const itemHtml = `
+                        <div class="gallery-preview-item">
+                            <img src="${previewSrc}" alt="Gallery Preview">
+                            <span class="item-badge">${sourceBadge}</span>
+                            <button type="button" class="item-delete-btn" onclick="removeGalleryItem(${colorId}, ${idx})" title="Remove image">
+                                <i class="ti ti-x"></i>
+                            </button>
+                            <div class="item-source-tag" title="${sourceText}">${sourceText}</div>
+                        </div>
+                    `;
+                    $previewsContainer.append(itemHtml);
+                });
+                
+                const $dropzone = $(`#gallery-dropzone-${colorId}`);
+                if (currentImages.length >= 3) {
+                    $dropzone.addClass('d-none');
+                } else {
+                    $dropzone.removeClass('d-none');
+                }
+            }
+
+            function syncGalleryInputs(colorId) {
+                const currentImages = window.variantImages[colorId] || [];
+                
+                for (let i = 0; i < 3; i++) {
+                    const $fileInput = $(`#hidden-file-${colorId}-${i}`);
+                    const $urlInput = $(`#hidden-url-${colorId}-${i}`);
+                    const $deleteInput = $(`#hidden-delete-${colorId}-${i}`);
+                    
+                    if (i < currentImages.length) {
+                        const img = currentImages[i];
+                        
+                        if (img.type === 'file') {
+                            const dt = new DataTransfer();
+                            dt.items.add(img.file);
+                            $fileInput[0].files = dt.files;
+                            $urlInput.val('');
+                            $deleteInput.val('0');
+                        } else if (img.type === 'url' || img.type === 'db') {
+                            $fileInput.val('');
+                            $urlInput.val(img.url);
+                            $deleteInput.val('0');
+                        }
+                    } else {
+                        $fileInput.val('');
+                        $urlInput.val('');
+                        $deleteInput.val('1');
+                    }
+                }
+            }
 
             function addColorCard(colorId, colorName, colorCode) {
                 if ($(`#variant-card-${colorId}`).length > 0) return;
@@ -322,25 +444,43 @@
                     `;
                 });
 
-                let imagesHtml = '';
-                for (let index = 0; index < 3; index++) {
-                    const oldUrl = oldData[`detail_image_${index}`] || '';
-                    imagesHtml += `
-                        <div class="col-md-4">
-                            <div class="p-2 border rounded-3 bg-white" style="border-color: var(--border-color) !important;">
-                                <span class="fw-bold text-muted d-block mb-1" style="font-size: 11.5px;">Detail Image ${index + 1}</span>
-                                <div class="mb-2">
-                                    <label class="text-muted mb-0.5" style="font-size: 11px;">Upload File</label>
-                                    <input type="file" name="variants[${colorId}][detail_image_file_${index}]" class="form-control form-control-sm rounded-3 py-1" style="border-color: var(--border-color); font-size: 12px;">
-                                </div>
-                                <div>
-                                    <label class="text-muted mb-0.5" style="font-size: 11px;">Or Image URL</label>
-                                    <input type="text" name="variants[${colorId}][detail_image_${index}]" value="${oldUrl}" class="form-control form-control-sm rounded-3 py-1" placeholder="https://example.com/detail.jpg" style="border-color: var(--border-color); font-size: 12px;">
+                let imagesHtml = `
+                    <div class="col-12">
+                        <div class="border rounded-3 p-3 bg-light" style="border-color: var(--border-color) !important;">
+                            <div class="gallery-upload-wrapper mb-3" id="gallery-wrapper-${colorId}">
+                                <div id="gallery-previews-${colorId}" class="d-flex flex-wrap gap-2"></div>
+                                
+                                <div id="gallery-dropzone-${colorId}" class="gallery-dropzone">
+                                    <i class="ti ti-photo-plus"></i>
+                                    <span>Upload (Max 3)</span>
+                                    <input type="file" id="gallery-file-input-${colorId}" class="d-none" multiple accept="image/*">
                                 </div>
                             </div>
+
+                            <div>
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 11px;">Or Add Image by URL</label>
+                                <div class="input-group">
+                                    <input type="text" id="gallery-url-input-${colorId}" class="form-control form-control-sm rounded-start-3" placeholder="https://example.com/image.jpg" style="border-color: var(--border-color); font-size: 12px;">
+                                    <button class="btn btn-outline-secondary btn-sm rounded-end-3" type="button" id="gallery-add-url-btn-${colorId}" style="font-size: 12px; border-color: var(--border-color);">Add URL</button>
+                                </div>
+                            </div>
+
+                            <div id="gallery-hidden-inputs-${colorId}" class="d-none">
+                                <input type="file" name="variants[${colorId}][detail_image_file_0]" id="hidden-file-${colorId}-0">
+                                <input type="file" name="variants[${colorId}][detail_image_file_1]" id="hidden-file-${colorId}-1">
+                                <input type="file" name="variants[${colorId}][detail_image_file_2]" id="hidden-file-${colorId}-2">
+                                
+                                <input type="text" name="variants[${colorId}][detail_image_0]" id="hidden-url-${colorId}-0">
+                                <input type="text" name="variants[${colorId}][detail_image_1]" id="hidden-url-${colorId}-1">
+                                <input type="text" name="variants[${colorId}][detail_image_2]" id="hidden-url-${colorId}-2">
+
+                                <input type="hidden" name="variants[${colorId}][delete_detail_0]" id="hidden-delete-${colorId}-0" value="0">
+                                <input type="hidden" name="variants[${colorId}][delete_detail_1]" id="hidden-delete-${colorId}-1" value="0">
+                                <input type="hidden" name="variants[${colorId}][delete_detail_2]" id="hidden-delete-${colorId}-2" value="0">
+                            </div>
                         </div>
-                    `;
-                }
+                    </div>
+                `;
 
                 const cardHtml = `
                     <div class="card border mb-3 rounded-3 variant-card" id="variant-card-${colorId}" style="border-color: var(--border-color) !important;">
@@ -368,7 +508,7 @@
 
                             <!-- Detail Images -->
                             <div>
-                                <label class="form-label fw-semibold text-dark mb-1 d-block" style="font-size: 13px;">Gallery Images for ${colorName} <span class="text-muted" style="font-weight: normal; font-size: 11.5px;">(3 Detail Images)</span></label>
+                                <label class="form-label fw-semibold text-dark mb-1 d-block" style="font-size: 13px;">Gallery Images for ${colorName} <span class="text-muted" style="font-weight: normal; font-size: 11.5px;">(Max 3 Gallery Images)</span></label>
                                 <div class="row g-3">
                                     ${imagesHtml}
                                 </div>
@@ -378,9 +518,77 @@
                 `;
 
                 $('#variation-details-container').append(cardHtml);
+
+                // Initialize state array
+                window.variantImages[colorId] = [];
+
+                // Handle oldData
+                for (let i = 0; i < 3; i++) {
+                    const oldUrl = oldData[`detail_image_${i}`] || '';
+                    if (oldUrl) {
+                        window.variantImages[colorId].push({
+                            type: 'url',
+                            url: oldUrl
+                        });
+                    }
+                }
+
+                renderGallery(colorId);
+                syncGalleryInputs(colorId);
+
+                // Register event listeners
+                const $fileInput = $(`#gallery-file-input-${colorId}`);
+                $fileInput.on('change', function(e) {
+                    const files = e.target.files;
+                    if (files.length > 0) {
+                        handleGalleryFiles(colorId, files);
+                    }
+                    $fileInput.val('');
+                });
+
+                const $dropzone = $(`#gallery-dropzone-${colorId}`);
+                $dropzone.on('click', function(e) {
+                    if (e.target.tagName !== 'INPUT') {
+                        $fileInput.click();
+                    }
+                });
+
+                $dropzone.on('dragover dragenter', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).addClass('dragover');
+                });
+                $dropzone.on('dragleave drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).removeClass('dragover');
+                });
+                $dropzone.on('drop', function(e) {
+                    const files = e.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleGalleryFiles(colorId, files);
+                    }
+                });
+
+                $(`#gallery-add-url-btn-${colorId}`).on('click', function() {
+                    const $urlInput = $(`#gallery-url-input-${colorId}`);
+                    const url = $urlInput.val().trim();
+                    if (url) {
+                        addGalleryUrl(colorId, url);
+                        $urlInput.val('');
+                    }
+                });
             }
 
             function removeColorCard(colorId) {
+                if (window.variantImages[colorId]) {
+                    window.variantImages[colorId].forEach(img => {
+                        if (img.type === 'file' && img.previewUrl) {
+                            URL.revokeObjectURL(img.previewUrl);
+                        }
+                    });
+                    delete window.variantImages[colorId];
+                }
                 $(`#variant-card-${colorId}`).remove();
             }
 
@@ -412,5 +620,119 @@
             });
         });
     </script>
+    @endpush
+
+    @push('css')
+    <style>
+        .gallery-upload-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .gallery-dropzone {
+            width: 120px;
+            height: 120px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 8px;
+            text-align: center;
+        }
+        .gallery-dropzone:hover, .gallery-dropzone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            color: #3b82f6;
+        }
+        .gallery-dropzone i {
+            font-size: 24px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .gallery-dropzone:hover i, .gallery-dropzone.dragover i {
+            color: #3b82f6;
+        }
+        .gallery-dropzone span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .gallery-dropzone:hover span, .gallery-dropzone.dragover span {
+            color: #3b82f6;
+        }
+        .gallery-preview-item {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .gallery-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .gallery-preview-item .item-badge {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background-color: rgba(15, 23, 42, 0.75);
+            color: #fff;
+            font-size: 9.5px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .gallery-preview-item .item-delete-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background-color: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0;
+        }
+        .gallery-preview-item .item-delete-btn:hover {
+            background-color: #dc2626;
+            transform: scale(1.1);
+        }
+        .gallery-preview-item .item-delete-btn i {
+            font-size: 11px;
+        }
+        .gallery-preview-item .item-source-tag {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(15, 23, 42, 0.8);
+            color: #fff;
+            font-size: 9px;
+            padding: 3px 6px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(4px);
+        }
+    </style>
     @endpush
 @endsection

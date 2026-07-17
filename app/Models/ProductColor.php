@@ -37,4 +37,14 @@ class ProductColor extends Pivot
     {
         return $this->hasMany(ProductImage::class, 'product_color_id');
     }
+
+    /**
+     * Get the price for this color variant.
+     * If a specific price is set for this color, use it.
+     * Otherwise, fall back to the product's default price.
+     */
+    public function getFinalPrice()
+    {
+        return $this->price ?? $this->product->price;
+    }
 }

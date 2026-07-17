@@ -248,8 +248,9 @@
             selectedColorNameEl.innerText = variant.color.name;
         }
 
-        // Update Price safely
-        document.getElementById('product-price').innerText = '$ ' + parseFloat('{{ $product->price ?? 0 }}').toFixed(2);
+        // Update Price - use color variant price if set, otherwise use default product price
+        const variantPrice = variant.price && variant.price > 0 ? variant.price : {{ (float)($product->price ?? 0) }};
+        document.getElementById('product-price').innerText = '$ ' + parseFloat(variantPrice).toFixed(2);
 
         // Update Images
         const thumbsContainer = document.getElementById('product-thumbnails');
@@ -320,6 +321,8 @@
         const size = variant.sizes.find(s => s.id === currentSizeId);
         const qty = parseInt(document.getElementById('qty-input').value);
 
+        const cartPrice = variant.price && variant.price > 0 ? variant.price : {{ (float)($product->price ?? 0) }};
+        
         fetch('/cart/add', {
             method: 'POST',
             headers: {
@@ -331,7 +334,7 @@
                 variant_id: currentVariantId,
                 size_id: currentSizeId,
                 title: '{{ addslashes($product->title) }}',
-                price: {{ (float)($product->price ?? 0) }},
+                price: cartPrice,
                 thumbnail: variant.images && variant.images.length > 0 ? variant.images[0].image_path : '{{ $product->image }}',
                 color_name: variant.color.name,
                 size_name: size.name,
